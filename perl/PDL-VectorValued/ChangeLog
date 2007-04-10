@@ -1,0 +1,5 @@
+v0.02 Tue, 10 Apr 2007 14:45:00 +0200 (moocow)
+	+ added setops: vv_union, vv_intersect, vv_setdiff
+
+v0.01 Fri, 06 Apr 2007 11:41:00 +0200 (moocow)
+	+ initial version

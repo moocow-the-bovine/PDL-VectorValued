@@ -1,0 +1,15 @@
+ChangeLog
+MANIFEST
+MANIFEST.SKIP
+README.txt
+Makefile.PL
+VectorValued.pm
+VectorValued/Dev.pm
+VectorValued/Makefile.PL
+Utils/Makefile.PL
+Utils/utils.pd
+VectorValued/Version.pm
+t/common.plt
+t/00_basic.t
+t/01_rlevec.t
+t/02_cmpvec.t
