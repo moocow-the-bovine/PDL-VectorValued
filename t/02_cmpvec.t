@@ -1,5 +1,5 @@
 # -*- Mode: CPerl -*-
-# t/02_rlevec.t: test cmpvec, vv_qsortvec, vsearchvec
+# t/02_cmpvec.t: test cmpvec, vv_qsortvec, vsearchvec
 
 $TEST_DIR = './t';
 #use lib qw(../blib/lib ../blib/arch); $TEST_DIR = '.'; # for debugging

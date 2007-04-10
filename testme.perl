@@ -18,6 +18,40 @@ sub isok {
 }
 
 ##---------------------------------------------------------------------
+## test: set ops
+
+sub test_setops_data {
+  our $universe = pdl(long,[ [0,0],[0,1],[1,0],[1,1] ]);
+  our $v1 = $universe->dice_axis(1,pdl([0,1,2]));
+  our $v2 = $universe->dice_axis(1,pdl([1,2,3]));
+}
+
+sub test_setops {
+  test_setops_data();
+  our ($c,$nc,$cc);
+
+  ($c,$nc) = $v1->vv_union($v2);
+  isok("vv_union:list:c",  all($c==pdl([ [0,0],[0,1],[1,0],[1,1],[0,0],[0,0] ])));
+  isok("vv_union:list:nc", $nc==$universe->dim(1));
+  $cc = $v1->vv_union($v2);
+  isok("vv_union:scalar", all($cc==$universe));
+
+  ($c,$nc) = $v1->vv_intersect($v2);
+  isok("vv_intersect:list:c", all($c==pdl([ [0,1],[1,0],[0,0] ])));
+  isok("vv_intersect:list:nc", $nc==$v1->dim(1));
+  $cc = $v1->vv_intersect($v2);
+  isok("vv_intersect:scalar", all($cc==$universe->slice(",1:2")));
+
+  ($c,$nc) = $v1->vv_setdiff($v2);
+  isok("vv_setdiff:list:c", all($c==pdl([ [0,0], [0,0],[0,0] ])));
+  isok("vv_setdiff:list:nc", $nc==1);
+  $cc = $v1->vv_setdiff($v2);
+  isok("vv_setdiff:scalar", all($cc==pdl([[0,0]])));
+}
+test_setops;
+
+
+##---------------------------------------------------------------------
 ## test: vsearchvec
 
 sub vsvec_data {

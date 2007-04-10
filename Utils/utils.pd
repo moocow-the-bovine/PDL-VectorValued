@@ -488,6 +488,214 @@ Vectors with bad components should be treated as last in  the lexicographic orde
     ); # pp_def qsortveci
 
 
+##======================================================================
+## Vector-Valued Set Operations
+##======================================================================
+pp_addpm(<<'EOPM');
+
+=pod
+
+=head1 Vector-Valued Set Operations
+
+The following functions are provided for set operations on
+sorted vector-valued PDLs.
+
+=cut
+
+EOPM
+
+##------------------------------------------------------
+## vv_union() : set union
+vvpp_def
+  ('vv_union',
+   Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::vv_union {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::vv_union(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
+   my @adims = $a->dims;
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $adims[$#adims] + $b->dim(-1));
+   }
+   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
+   &PDL::_vv_union_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+ }
+)),
+   Code =>
+(q(
+ long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ $GENERIC() aval, bval;
+ int cmpval;
+ for ( ; nci < sizeNC; nci++) {
+   if (nai < sizeNA && nbi < sizeNB) {
+     $CMPVEC('$a(NA=>nai)','$b(NB=>nbi)','M','cmpval',var1=>'aval',var2=>'bval');
+   }
+   else if (nai < sizeNA) { cmpval = -1; }
+   else if (nbi < sizeNB) { cmpval =  1; }
+   else                   { break; }
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
+     nai++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     loop (M) %{ $c(NC=>nci) = $b(NB=>nbi); %}
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
+     nai++;
+     nbi++;
+   }
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Union of two vector-valued PDLs.  Input PDLs $a() and $b() B<MUST> be
+sorted in lexicographic order.
+On return, $nc() holds the actual number of vector-values in the union.
+
+In scalar context, slices $c() to the actual number of elements in the union
+and returns the sliced PDL.
+
+
+EOD
+  );
+
+
+##------------------------------------------------------
+## vv_intersect() : set intersection
+vvpp_def
+  ('vv_intersect',
+   Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::vv_intersect {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::vv_intersect(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
+   my @adims = $a->dims;
+   my $NA = $adims[$#adims];
+   my $NB = $b->dim(-1);
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $NA < $NB ? $NA : $NB);
+   }
+   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
+   &PDL::_vv_intersect_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+ }
+)),
+   Code =>
+(q(
+ long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ $GENERIC() aval, bval;
+ int cmpval;
+ for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB; ) {
+   $CMPVEC('$a(NA=>nai)','$b(NB=>nbi)','M','cmpval',var1=>'aval',var2=>'bval');
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     nai++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
+     nai++;
+     nbi++;
+     nci++;
+   }
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Intersection of two vector-valued PDLs.
+Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order.
+On return, $nc() holds the actual number of vector-values in the intersection.
+
+In scalar context, slices $c() to the actual number of elements in the intersection
+and returns the sliced PDL.
+
+EOD
+  );
+
+
+##------------------------------------------------------
+## vv_setdiff() : set difference
+vvpp_def
+  ('vv_setdiff',
+   Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::vv_setdiff {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::vv_setdiff(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
+   my @adims = $a->dims;
+   my $NA = $adims[$#adims];
+   my $NB = $b->dim(-1);
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $NA);
+   }
+   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
+   &PDL::_vv_setdiff_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+ }
+)),
+   Code =>
+(q(
+ long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ $GENERIC() aval, bval;
+ int cmpval;
+ for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB ; ) {
+   $CMPVEC('$a(NA=>nai)','$b(NB=>nbi)','M','cmpval',var1=>'aval',var2=>'bval');
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
+     nai++;
+     nci++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     nai++;
+     nbi++;
+   }
+ }
+ for ( ; nci < sizeNC && nai < sizeNA ; nai++,nci++ ) {
+   loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Set-difference ($a() \ $b()) of two vector-valued PDLs.
+Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order.
+On return, $nc() holds the actual number of vector-values in the computed vector set.
+
+In scalar context, slices $c() to the actual number of elements in the output vector set
+and returns the sliced PDL.
+
+EOD
+  );
 
 
 ##======================================================================
