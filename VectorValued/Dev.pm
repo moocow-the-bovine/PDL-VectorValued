@@ -109,12 +109,29 @@ Currently known PDL::VectorValued macros include:
 See the documentation of the individual expansion subroutines
 for details on calling conventions.
 
+You can add your own expansion macros by pushing an expansion
+manipulating the array
+
+ @PDL::VectorValued::Dev::MACROS
+
+which is just a list of expansion subroutines which take a single
+argument (string for Code or BadCode) and should return the expanded
+string.
+
 =cut
 
+our @MACROS =
+    (
+     \&vvpp_expand_cmpvec,
+     ##
+     ## ... more macros here
+     );
 sub vvpp_expand {
   my $str = shift;
-  $str = vvpp_expand_cmpvec($str);
-  ##-- ... more macros here
+  my ($macro_sub);
+  foreach $macro_sub (@MACROS) {
+      $str = $macro_sub->($str);
+  }
   $str;
 }
 

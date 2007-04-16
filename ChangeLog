@@ -1,3 +1,6 @@
+v0.03 Mon, 16 Apr 2007 09:58:49 +0200
+	+ added @PDL::VectorValued::Dev::MACROS
+ 
 v0.02 Tue, 10 Apr 2007 14:45:00 +0200 (moocow)
 	+ added setops: vv_union, vv_intersect, vv_setdiff
 
