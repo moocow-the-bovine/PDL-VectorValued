@@ -80,7 +80,7 @@ functions to higher-order PDLs which treat vectors as "data values".
 Drop-in replacement for broken uniqvec() which uses vv_qsortvec().
 Otherwise copied from PDL::Primitive::primitive.pd.
 
-See also: PDL::VectorValued::vv_qsortvec, PDL::Primitive::uniqvec.
+See also: PDL::VectorValued::Utils::vv_qsortvec, PDL::Primitive::uniqvec.
 
 =cut
 
