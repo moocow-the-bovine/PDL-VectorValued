@@ -18,6 +18,7 @@ our @ISA = qw(PDL::Exporter);
 our @EXPORT_OK =
   (
    (@PDL::VectorValued::Utils::EXPORT_OK), ##-- inherited
+   qw(vv_uniqvec),
    qw(rleND rldND),
   );
 our %EXPORT_TAGS =
@@ -62,6 +63,49 @@ functions to higher-order PDLs which treat vectors as "data values".
 =head1 FUNCTIONS
 
 =cut
+
+##----------------------------------------------------------------------
+## vv_uniqvec
+
+=pod
+
+=head2 vv_uniqvec
+
+=for sig
+
+  Signature: (int v(N,M); [o]vu(N,MU))
+
+=for ref
+
+Drop-in replacement for broken uniqvec() which uses vv_qsortvec().
+Otherwise copied from PDL::Primitive::primitive.pd.
+
+See also: PDL::Slices::rld, PDL::VectorValued::Utils::rldvec
+
+=cut
+
+*PDL::vv_uniqvec = \&vv_uniqvec;
+sub vv_uniqvec {
+  my($pdl) = shift;
+
+  # slice is not cheap but uniqvec isn't either -- shouldn't cost too much.
+  return $pdl if($pdl->nelem == 0 || $pdl->ndims <2 || $pdl->slice("(0)")->nelem < 2); 
+
+  my $srt = $pdl->mv(0,-1)->
+    clump($pdl->ndims - 1)->
+      mv(-1,0)->vv_qsortvec-> ##-- moo: Tue, 24 Apr 2007 17:17:39 +0200: use vv_qsortvec
+	mv(0,-1);
+
+  $srt=$srt->dice($srt->mv(0,-1)->ngoodover->which) if ($PDL::Bad::Status && $srt->badflag);
+  ##use dice instead of nslice since qsortvec might be packing the badvals to the front of
+  #the array instead of the end like the docs say. If that is the case and it gets fixed,
+  #it won't bust uniqvec. DAL 14-March 2006
+  my $uniq = ($srt != $srt->rotate(-1)) -> mv(0,-1) -> orover->which;
+
+  return $uniq->nelem==0 ? 
+	$srt->slice("0,:")->mv(0,-1) :
+	$srt->dice($uniq)->mv(0,-1);
+}
 
 
 ##======================================================================
@@ -173,11 +217,13 @@ sub rldND {
 =head2 Low-Level Functions
 
 Some additional low-level functions are provided in the
-PDL::Ngrams::ngutils
+PDL::VectorValued::Utils
 package.
-See L<PDL::Ngrams::ngutils> for details.
+See L<PDL::VectorValued::Utils> for details.
 
 =cut
+
+
 
 ##======================================================================
 ## pod: Footer
