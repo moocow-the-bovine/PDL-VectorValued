@@ -57,7 +57,7 @@ rle() and rld() in $PDL_SRC_ROOT/Basic/Slices/slices.pd
 
 Code for vv_qsortvec() copied nearly verbatim from the builtin PDL functions
 in $PDL_SRC_ROOT/Basic/Ufunc/ufunc.pd, with Chris Marshall's "uniqsortvec" patch.
-Code for qsortveci() based on the same.
+Code for vv_qsortveci() based on the same.
 
 =back
 

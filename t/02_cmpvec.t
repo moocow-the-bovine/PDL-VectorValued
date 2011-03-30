@@ -27,13 +27,13 @@ isok("cmpvec:1d:==", $v1->cmpvec($v1)==0);
 
 
 ##--------------------------------------------------------------
-## qsortvec, qsortveci
+## vv_qsortvec, vv_qsortveci
 
 ##-- 4..5: qsortvec, qsortveci
 our $p2d  = pdl([[1,2],[3,4],[1,3],[1,2],[3,3]]);
 
-isok("vv_qsortvec", all($p2d->vv_qsortvec==pdl([[1,2],[1,2],[1,3],[3,3],[3,4]])));
-isok("qsortveci",   all($p2d->dice_axis(1,$p2d->qsortveci)==$p2d->vv_qsortvec));
+isok("vv_qsortvec",  all($p2d->vv_qsortvec==pdl([[1,2],[1,2],[1,3],[3,3],[3,4]])));
+isok("vv_qsortveci", all($p2d->dice_axis(1,$p2d->vv_qsortveci)==$p2d->vv_qsortvec));
 
 ##--------------------------------------------------------------
 ## vsearchvec

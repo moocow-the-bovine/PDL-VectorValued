@@ -397,11 +397,11 @@ Vectors with bad components should be moved to the end of the array.
 
 
 ##======================================================================
-## qsortveci: new
+## vv_qsortveci: new
 ##  + adopted from patched $PDL_SRC_ROOT/Basic/Ufunc/ufunc.pd
 ##======================================================================
 
-# Internal utility sorting routine for qsortveci
+# Internal utility sorting routine for vv_qsortveci
 foreach (keys %PDL::Types::typehash) {
     my $ctype = $PDL::Types::typehash{$_}{ctype};
     my $ppsym = $PDL::Types::typehash{$_}{ppsym};
@@ -467,7 +467,7 @@ sub generic_vecval_qsortvec_ind {
 }
 
 pp_def(
-    'qsortveci',
+    'vv_qsortveci',
     HandleBad => 1,
     Pars => 'a(n,m); int [o]ix(m);',
     Code => 
@@ -485,7 +485,7 @@ Get lexicographic sort order of a matrix $a() viewed as a list of vectors.
 '
 Vectors with bad components should be treated as last in  the lexicographic order.
 ',
-    ); # pp_def qsortveci
+    ); # pp_def vv_qsortveci
 
 
 ##======================================================================
@@ -730,7 +730,7 @@ rle() and rld() in $PDL_SRC_ROOT/Basic/Slices/slices.pd
 
 Code for vv_qsortvec() copied nearly verbatim from the builtin PDL functions
 in $PDL_SRC_ROOT/Basic/Ufunc/ufunc.pd, with Chris Marshall's "uniqsortvec" patch.
-Code for qsortveci() based on the same.
+Code for vv_qsortveci() based on the same.
 
 =back
 
