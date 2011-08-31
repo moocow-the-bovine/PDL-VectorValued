@@ -3,12 +3,14 @@ MANIFEST
 MANIFEST.SKIP
 README.txt
 Makefile.PL
+pdlmake.prl
 VectorValued.pm
 VectorValued/Dev.pm
+VectorValued/Version.pm
 VectorValued/Makefile.PL
 Utils/Makefile.PL
 Utils/utils.pd
-VectorValued/Version.pm
+Utils/Utils.pm
 t/common.plt
 t/00_basic.t
 t/01_rlevec.t

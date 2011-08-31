@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 ##     ERROR from evaluation of .../ccsutils/Makefile.PL:
 ##     Modification of a read-only value attempted at /usr/share/perl/5.8/Carp/Heavy.pm line 45.
 our $realclean_files = '*~ *.tmp README.txt';
-our $has_readme_pod  = grep {-e $_ } (<README.pod>, <README.POD>);
+our $has_readme_pod  = grep {-e $_ } (<README.pod>, <README.POD>, <README.rpod>);
 our $has_pdlpp       = grep {-e $_ } (<*.pd>);
 WriteMakefile(
 	      NAME=>'PDL::VectorValued::Dev',
@@ -42,7 +42,7 @@ sub MY::special_targets {
   #$inherited =~ s/^(\.SUFFIXES\s*:.*)$/$1 .pod .pm .man .txt .html;/
   $inherited .=
 "
-.SUFFIXES: .pm .pod .man .txt .html
+.SUFFIXES: .pm .pod .rpod .man .txt .html
 
 .pm.html:
 \tpod2html --outfile \$@ \$<
@@ -55,6 +55,13 @@ sub MY::special_targets {
 
 .pod.txt:
 \tpod2text \$< \$@
+
+.rpod.html:
+\tpod2html --outfile \$@ \$<
+
+.rpod.txt:
+\tpod2text \$< \$@
+
 ";
   return $inherited;
 }
