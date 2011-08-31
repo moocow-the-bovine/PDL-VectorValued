@@ -1,7 +1,7 @@
 use ExtUtils::MakeMaker;
 
 @MY::pdpm = qw(Utils/Utils.pm);
-require "pdlmake.prl";
+require "pdlmaker.plm";
 
 WriteMakefile(
 	      NAME         => 'PDL::VectorValued',
