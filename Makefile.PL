@@ -1,7 +1,8 @@
 use ExtUtils::MakeMaker;
 
-@MY::pdpm = qw(Utils/Utils.pm);
+#@MY::pdpm = qw(Utils/Utils.pm);
 require "pdlmaker.plm";
+pdlmaker_init();
 
 WriteMakefile(
 	      NAME         => 'PDL::VectorValued',

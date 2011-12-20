@@ -1,8 +1,10 @@
 use PDL::Core::Dev;
 use ExtUtils::MakeMaker;
+require "../pdlmaker.plm";
 PDL::Core::Dev->import();
 
 $package = ['utils.pd','Utils','PDL::VectorValued::Utils'];
+pdlmaker_init($package);
 %hash = pdlpp_stdargs($package);
 
 $hash{AUTHOR}         = 'Bryan Jurish';

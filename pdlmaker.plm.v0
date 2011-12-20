@@ -1,0 +1,135 @@
+## -*- Mode: CPerl -*-
+##
+## File: pdlmaker.plm
+## Author: Bryan Jurish <moocow@cpan.org>
+## Description: hacks for CPAN-friendly PDL module distribution
+##
+## Usage:
+##  + optionally set the variable @MY::pdpm in the top-level Makefile.PL
+##    - if unset, scans MANIFEST for BASE.pd files and reads comments of the form `# pm=PMFILE'
+##      on the same line (hash and pm= are optional)
+##    - otherwise defaults for BASE.pd to BASE.pm
+##  + optionally set the variable $MY::README (boolean); default is
+##      $MY::README = grep {-e $_} (<README.txt>,<README.pod>,<README.rpod>)
+##  + read this file in top-level Makefile.PL:
+##      require "pdlmaker.plm";
+##  + call WriteMakefile() as usual
+##  + omit the pdlpp_postamble() call from MY::postamble()
+##    (you still need to 'use PDL::Core::Dev' though)
+##
+## Effects:
+##  + clobbers sub ExtUtils::MakeMaker::WriteMakefile()
+##    - unlinks all @MY::pdpm files before calling "real" WriteMakefile()
+##  + clobbers MY::depend (appends)
+##    - adds @MY::pdpm dependencies to dist,distcheck,create_distdir
+##    - also adds README.txt dependencies if README.txt or README.rpod is present
+##  + clobbers MY::special_targets (appends)
+##    - adds (pm|pod|rpod) -> (txt|html) rules
+##  #+ clobbers MY::distdir (changes)
+##  #  - copies @MY::pdpm files to distribution directory in create_distdir: rule
+##  + clobbers MY::postamble (appends)
+##    - adds pdlpp_postamble($::package) if $::package is defined
+
+package MY;
+use ExtUtils::MakeMaker qw();
+use ExtUtils::Manifest qw();
+use strict;
+use vars qw(@pdpm %pdpm $README);
+
+##-- set default @MY::pdpm
+if (!@pdpm) {
+  my $mani = ExtUtils::Manifest::maniread();
+  my ($pd,$pm);
+  foreach $pd (grep {/\.pd$/i} keys %$mani) {
+    if ($mani->{$pd}) {
+      ($pm=$mani->{$pd}) =~ s/^[\#\s]*(?:pm=)?//;
+      if ($pm) {
+	push(@pdpm,$pm);
+	next;
+      }
+    }
+    ($pm=$pd)=~s/\.pd$/\.pm/i;
+    push(@pdpm,$pm);
+  }
+}
+print STDERR "pdlmaker: pdpm=(", join(' ', @pdpm), ")\n";
+our %pdpm = (map {($_=>undef)} @pdpm);
+
+##-- set default $MY::README
+if (!defined($MY::README)) {
+  $MY::README = grep {-e $_} map {glob("README.$_")} qw(txt pod rpod);
+}
+
+## @missed = ExtUtils::Manifest::manicheck()
+##  + ignore @pdpm files
+#our $_manicheck0 = \&ExtUtils::Manifest::manicheck;
+#our $_manicheck1 = sub {
+#  grep {!exists($MY::pdpm{$_})} $MY::_manicheck0->(@_);
+#};
+#*ExtUtils::Manifest::manicheck = $_manicheck1;
+
+## WriteMakefile(%args)
+##  + first unlink @pdpm files so they don't interfere with pdlpp rules
+our $_WriteMakefile0 = \&ExtUtils::MakeMaker::WriteMakefile;
+our $_WriteMakefile1 = sub {
+  unlink($_) foreach (grep {-e $_} @MY::pdpm);
+  $MY::_WriteMakefile0->(@_);
+};
+*ExtUtils::MakeMaker::WriteMakefile = $_WriteMakefile1;
+
+## depend()
+##  + add @pdpm, README.txt
+sub depend {
+  my $inherited = shift->SUPER::depend(@_);
+  my $deps = join(' ', ($MY::README ? 'README.txt' : qw()), @MY::pdpm);
+  return $inherited if (!$deps);
+  return $inherited .<<EOF;
+
+dist: $deps
+
+distcheck: $deps
+
+create_distdir: $deps
+
+EOF
+}
+
+## special_targets()
+##  + add .SUFFIXES, (pm|pod|rpod)->(txt|html)
+sub special_targets {
+  return shift->SUPER::special_targets(@_) .<<EOF;
+
+.SUFFIXES: .pm .pod .rpod .txt .html
+
+.pm.html:
+	pod2html --outfile \$@ \$<
+
+.pm.txt:
+	pod2text \$< \$@
+
+.pod.html:
+	pod2html --outfile \$@ \$<
+
+.pod.txt:
+	pod2text \$< \$@
+
+.rpod.html:
+	pod2html --outfile \$@ \$<
+
+.rpod.txt:
+	pod2text \$< \$@
+
+EOF
+}
+
+## postamble()
+##  + add pdlpp postamble if available
+sub postamble {
+  my $inherited = shift->SUPER::postamble();
+  if (defined($::package) && UNIVERSAL::can('PDL::Core::Dev','pdlpp_postamble')) {
+    $inherited .= PDL::Core::Dev::pdlpp_postamble($::package);
+  }
+  $inherited;
+}
+
+1; ##-- be happy
