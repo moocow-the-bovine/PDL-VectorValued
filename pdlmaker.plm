@@ -5,31 +5,26 @@
 ## Description: hacks for CPAN-friendly PDL module distribution
 ##
 ## Usage:
-##  + optionally set the variable @MY::pdpm in the top-level Makefile.PL
-##    - if unset, scans MANIFEST for BASE.pd files and reads comments of the form `# pm=PMFILE'
-##      on the same line (hash and pm= are optional)
-##    - otherwise defaults for BASE.pd to BASE.pm
 ##  + optionally set the variable $MY::README (boolean); default is
 ##      $MY::README = grep {-e $_} (<README.txt>,<README.pod>,<README.rpod>)
 ##  + read this file in top-level Makefile.PL:
 ##      require "pdlmaker.plm";
 ##  + call pdlmaker_init([$pdfile, $pmbase, $module]) as for pdlpp_stdargs()
+##    - will actually call pdlpp_stdargs() and return that hash if called in list context
 ##  + call WriteMakefile() as usual
 ##  + omit the pdlpp_postamble() call from MY::postamble()
 ##    (you still need to 'use PDL::Core::Dev' though)
 ##
 ## Effects:
 ##  + clobbers sub ExtUtils::MakeMaker::WriteMakefile()
-##    - unlinks all @MY::pdpm files before calling "real" WriteMakefile()
-##  + clobbers MY::depend (appends)
-##    - adds @MY::pdpm dependencies to dist,distcheck,create_distdir
+##    - unlinks all @pdpm files before calling "real" WriteMakefile()
+##  + clobbers/appends MY::depend (appends)
+##    - adds @pdpm dependencies to dist,distcheck,create_distdir
 ##    - also adds README.txt dependencies if README.txt or README.rpod is present
-##  + clobbers MY::special_targets (appends)
+##  + clobbers/appends MY::special_targets (appends)
 ##    - adds (pm|pod|rpod) -> (txt|html) rules
-##  #+ clobbers MY::distdir (changes)
-##  #  - copies @MY::pdpm files to distribution directory in create_distdir: rule
-##  + clobbers MY::postamble (appends)
-##    - adds pdlpp_postamble($::package) if $::package is defined
+##  + clobbers/appends MY::postamble (appends)
+##    - adds pdlpp_postamble($package) if $package is specified
 
 package MY;
 use ExtUtils::MakeMaker qw();
@@ -49,6 +44,7 @@ sub pdlmaker_init {
 
   ##----------------------------
   ## read manifest @pdpm (for user info message)
+  my @manipm = qw();
   if (-r 'MANIFEST') {
     my $mani = ExtUtils::Manifest::maniread();
     my ($pd,$pm);
@@ -56,20 +52,19 @@ sub pdlmaker_init {
       if ($mani->{$pd}) {
 	($pm=$mani->{$pd}) =~ s/^[\#\s]*(?:pm=)?//;
 	if ($pm) {
-	  push(@pdpm,$pm);
+	  push(@manipm,$pm);
 	  next;
 	}
       }
       ($pm=$pd)=~s/\.pd$/\.pm/i;
-      push(@pdpm,$pm);
+      push(@manipm,$pm);
     }
-    print STDERR "Info: ignore any warnings about missing $pm\n";
+    print STDERR "Info: ignore any warnings about missing $_\n" foreach (@manipm);
   }
   elsif (0 && $package) {
     print STDERR "Info: ignore any warnings about missing $package->[1].pm\n";
     ;
   }
-  my %pdpm = (map {($_=>undef)} @pdpm);
 
   ##----------------------------
   ## $MY::README
@@ -87,18 +82,20 @@ sub pdlmaker_init {
   ##----------------------------
   ## @missed = ExtUtils::Manifest::manicheck()
   ##  + ignore @pdpm files in manicheck
+  my %manipm = (map {($_=>undef)} @manipm,@pdpm);
   my $_manicheck0 = \&ExtUtils::Manifest::manicheck;
   my $_manicheck1 = sub {
-    grep {!exists($pdpm{$_})} $_manicheck0->(@_);
+    grep {!exists($manipm{$_})} $_manicheck0->(@_);
   };
   *ExtUtils::Manifest::manicheck = $_manicheck1;
 
   ##----------------------------
   ## depend()
   ##  + add @pdpm, README.txt
+  my $depend0 = MY->can('depend') || sub {''};
   my $depend = sub {
-    my $inherited = shift->SUPER::depend(@_);
-    my $deps = join(' ', ($MY::README ? 'README.txt' : qw()), @pdpm);
+    my $inherited  = $depend0->(@_) . shift->SUPER::depend(@_);
+    my $deps = join(' ', ($MY::README ? 'README.txt' : qw()), sort keys %manipm);
     return $inherited if (!$deps);
     return $inherited .<<EOF;
 
@@ -115,8 +112,9 @@ EOF
   ##----------------------------
   ## special_targets()
   ##  + add .SUFFIXES, (pm|pod|rpod)->(txt|html)
+  my $special_targets0 = MY->can('special_targets') || sub {''};
   my $special_targets = sub {
-    my $inherited = shift->SUPER::special_targets(@_);
+    my $inherited = $special_targets0->(@_) . shift->SUPER::special_targets(@_);
     $inherited .= <<EOF;
 
 .SUFFIXES: .pm .pod .rpod .txt .html
@@ -141,7 +139,7 @@ EOF
 
 EOF
 
-    foreach (@pdpm) {
+    foreach (sort keys %manipm) {
       my ($dir,$base) = (dirname($_),basename($_));
       if ($dir ne '.') {
 	$inherited .= "$_:\n\t\$(MAKE) -C $dir $base\n\n";
@@ -155,8 +153,9 @@ EOF
   ##----------------------------
   ## postamble()
   ##  + add pdlpp postamble if available
+  my $postamble0 = MY->can('postamble') || sub {''};
   my $postamble = sub {
-    my $inherited = shift->SUPER::postamble();
+    my $inherited = $postamble0->(@_) . shift->SUPER::postamble();
     if (defined($package) && UNIVERSAL::can('PDL::Core::Dev','pdlpp_postamble')) {
       $inherited .= PDL::Core::Dev::pdlpp_postamble($package);
     }
