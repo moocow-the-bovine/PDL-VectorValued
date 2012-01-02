@@ -34,16 +34,22 @@
 package MY;
 use ExtUtils::MakeMaker qw();
 use ExtUtils::Manifest qw();
+use Cwd qw(cwd abs_path);
+use File::Basename qw(dirname basename);
 use strict;
-use vars qw(@pdpm %pdpm $pdpkg $README);
 
+##----------------------------------------------------------------------
 sub pdlmaker_init {
   my $package = shift;
-  if ($package) {
-    $pdpkg = $package;
-    @pdpm = ("$package->[1].pm");
-  }
-  elsif (!@pdpm) {
+  my @pdpm = $package ? "$package->[1].pm" : qw();
+
+  my $cwd   = cwd();
+  my $label = "pdlmaker_init [DIR=$cwd]";
+  #print STDERR "$label\n";
+
+  ##----------------------------
+  ## read manifest @pdpm (for user info message)
+  if (-r 'MANIFEST') {
     my $mani = ExtUtils::Manifest::maniread();
     my ($pd,$pm);
     foreach $pd (grep {/\.pd$/i} keys %$mani) {
@@ -57,38 +63,42 @@ sub pdlmaker_init {
       ($pm=$pd)=~s/\.pd$/\.pm/i;
       push(@pdpm,$pm);
     }
+    print STDERR "Info: ignore any warnings about missing $pm\n";
   }
-  #print STDERR "pdlmaker($ENV{PWD}): pdpm=(", join(' ', @pdpm), ")\n";
+  elsif (0 && $package) {
+    print STDERR "Info: ignore any warnings about missing $package->[1].pm\n";
+    ;
+  }
+  my %pdpm = (map {($_=>undef)} @pdpm);
 
-  our %pdpm = (map {($_=>undef)} @pdpm);
-
-  ##-- set default $MY::README
+  ##----------------------------
+  ## $MY::README
   if (!defined($MY::README)) {
     $MY::README = grep {-e $_} map {glob("README.$_")} qw(txt pod rpod);
   }
 
+  ##----------------------------
+  ## unlink @pdpm files here
+  foreach (@pdpm) {
+    #print STDERR "$label: UNLINK $_\n";
+    unlink($_) if (-e $_);
+  }
+
+  ##----------------------------
   ## @missed = ExtUtils::Manifest::manicheck()
-  ##  + ignore @pdpm files
-  our $_manicheck0 = \&ExtUtils::Manifest::manicheck;
-  our $_manicheck1 = sub {
-    grep {!exists($MY::pdpm{$_})} $MY::_manicheck0->(@_);
+  ##  + ignore @pdpm files in manicheck
+  my $_manicheck0 = \&ExtUtils::Manifest::manicheck;
+  my $_manicheck1 = sub {
+    grep {!exists($pdpm{$_})} $_manicheck0->(@_);
   };
   *ExtUtils::Manifest::manicheck = $_manicheck1;
 
-  ## WriteMakefile(%args)
-  ##  + first unlink @pdpm files so they don't interfere with pdlpp rules
-  my $_WriteMakefile0 = \&ExtUtils::MakeMaker::WriteMakefile;
-  my $_WriteMakefile1 = sub {
-    unlink($_) foreach (grep {-e $_} @MY::pdpm);
-    $_WriteMakefile0->(@_);
-  };
-  *ExtUtils::MakeMaker::WriteMakefile = $_WriteMakefile1;
-
+  ##----------------------------
   ## depend()
   ##  + add @pdpm, README.txt
   my $depend = sub {
     my $inherited = shift->SUPER::depend(@_);
-    my $deps = join(' ', ($MY::README ? 'README.txt' : qw()), @MY::pdpm);
+    my $deps = join(' ', ($MY::README ? 'README.txt' : qw()), @pdpm);
     return $inherited if (!$deps);
     return $inherited .<<EOF;
 
@@ -102,10 +112,12 @@ EOF
   };
   *MY::depend = $depend;
 
+  ##----------------------------
   ## special_targets()
   ##  + add .SUFFIXES, (pm|pod|rpod)->(txt|html)
   my $special_targets = sub {
-    return shift->SUPER::special_targets(@_) .<<EOF;
+    my $inherited = shift->SUPER::special_targets(@_);
+    $inherited .= <<EOF;
 
 .SUFFIXES: .pm .pod .rpod .txt .html
 
@@ -128,9 +140,19 @@ EOF
 	pod2text \$< \$@
 
 EOF
-  };
-  *MY::special_targets = \&special_targets;
 
+    foreach (@pdpm) {
+      my ($dir,$base) = (dirname($_),basename($_));
+      if ($dir ne '.') {
+	$inherited .= "$_:\n\t\$(MAKE) -C $dir $base\n\n";
+      }
+    }
+
+    return $inherited;
+  };
+  *MY::special_targets = $special_targets;
+
+  ##----------------------------
   ## postamble()
   ##  + add pdlpp postamble if available
   my $postamble = sub {
@@ -141,8 +163,15 @@ EOF
     $inherited;
   };
   *MY::postamble = $postamble;
+
+  ##---------------------------
+  ## returning list context? --> call pdlpp_stdargs()
+  return ::pdlpp_stdargs($package,@_) if ($package && wantarray && UNIVERSAL::can('main','pdlpp_stdargs'));
 }
 
-*::pdlmaker_init = \&MY::pdlmaker_init;
+##----------------------------------------------------------------------
+package main;
+*pdlmaker_init = \&MY::pdlmaker_init;
+
 
 1; ##-- be happy

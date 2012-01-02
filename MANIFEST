@@ -9,7 +9,7 @@ VectorValued/Dev.pm
 VectorValued/Version.pm
 VectorValued/Makefile.PL
 Utils/Makefile.PL
-Utils/utils.pd		# Utils/Utils.pm
+Utils/utils.pd			# Utils/Utils.pm
 Utils/Utils.pm
 t/common.plt
 t/00_basic.t

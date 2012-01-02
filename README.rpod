@@ -12,7 +12,7 @@ PDL::VectorValued - Assorted PDL utilities treating vectors as values
 
 =item * PDL
 
-Tested version 2.4.3
+Tested versions 2.4.3, 2.4.7_001, 2.4.9, 2.4.9_015.
 
 =back
 
@@ -85,7 +85,7 @@ the file.
 
 =item *
 
-All other parts copyright (c) 2007, Bryan Jurish.  All rights reserved.
+All other parts copyright (c) 2007 - 2011, Bryan Jurish.  All rights reserved.
 
 This package is free software, and entirely without warranty.
 You may redistribute it and/or modify it under the same terms
