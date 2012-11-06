@@ -164,6 +164,35 @@ EOD
 
   );
 
+##------------------------------------------------------
+## enumvec()
+pp_def('enumvec',
+       Pars => 'v(M,N); int [o]k(N)',
+       Code =><<'EOC',
+  int vn, sn=$SIZE(N), matches, kn;
+  for (vn=0; vn<sn; vn=kn) {
+     for (kn=vn, matches=1; matches && kn<sn; ) {
+       $k(N=>kn) = kn-vn;
+       ++kn;
+       loop (M) %{
+         if ($v(N=>vn) != $v(N=>kn)) {
+           matches=0;
+           break;
+         }
+       %}
+     }
+   }
+EOC
+       Doc =><<'EOD',
+Enumerate a list of vectors with locally unique keys.
+
+Given a sorted list of vectors $v, generate a vector $k containing locally unique keys for the elements of $v
+(where an "element" is a vector of length $M ocurring in $v).
+
+EOD
+
+);
+
 
 ##======================================================================
 ## Vector Search

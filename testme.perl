@@ -48,7 +48,7 @@ sub test_setops {
   $cc = $v1->vv_setdiff($v2);
   isok("vv_setdiff:scalar", all($cc==pdl([[0,0]])));
 }
-test_setops;
+#test_setops;
 
 
 ##---------------------------------------------------------------------
@@ -66,7 +66,7 @@ sub test_vsearchvec {
   isok("vsearchvev():<<",    pdl([-1,-1])->vsearchvec($which)==0);
   isok("vsearchvev():>>",    pdl([2,2])->vsearchvec($which)==$which->dim(1)-1);
 }
-test_vsearchvec();
+#test_vsearchvec();
 
 ##---------------------------------------------------------------------
 ## test: cmpvec
@@ -84,7 +84,7 @@ sub test_cmpvec {
   isok("cmpvec:1d:>",  $v2->cmpvec($v1)>0);
   isok("cmpvec:1d:==", $v1->cmpvec($v1)==0);
 }
-test_cmpvec;
+#test_cmpvec;
 
 
 ##---------------------------------------------------------------------
