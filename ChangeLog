@@ -1,3 +1,18 @@
+v0.07 Tue, 24 Sep 2013 13:12:27 +0200
+	* PREREQ_PM{PDL}=CONFIGURE_REQUIRES{PDL}=0, for CPAN-testers friendliness
+	* added support for PDL v2.007 PDL_Indx type (64-bit indices)
+
+v0.06 2012-11-06  moocow
+	* added enumvec(): enumerate repetitions in a sorted vector list
+
+v0.05 2012-01-02  moocow
+	* pdlmaker.plm version: for CPAN-friendly docs
+
+v0.0401 2011-12-20  moocow
+	* added 'generic' pdlmaker.plm : cpan-friendly pdl module hacks
+	* still not playing too nicely with embedded pd->pm conversions
+	  (e.g. Utils/utils.pd -> Utils/utils.pm)
+
 v0.04 Wed, 30 Mar 2011 15:12:32 +0200 (moocow)
 	+ renamed qsortveci() to vv_qsortveci to avoid conflicts with pdl-2.4.7 (debian squeeze)
 

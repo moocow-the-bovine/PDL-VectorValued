@@ -1,4 +1,4 @@
-## -*- Mode: Perl -*-
+## -*- Mode: CPerl -*-
 ##  + CPerl pukes on '/esg'-modifiers.... bummer
 ##
 ## $Id$
@@ -23,6 +23,9 @@ our @EXPORT_OK =
    ##
    ##-- High-level macro expansion
    qw(vvpp_def vvpp_expand),
+   ##
+   ##-- Type utilities
+   qw(vv_indx_sig vv_indx_typedef),
    ##
    ##-- Macro expansion subs
    qw(vvpp_pdlvar_basename),
@@ -146,7 +149,54 @@ sub vvpp_expand_cmpvec {
 }
 
 ##======================================================================
-## PP Utiltiies
+## PP Utilities: Types
+=pod
+
+=head1 Type Utilities
+
+=cut
+
+##--------------------------------------------------------------
+## $sigtype = vv_indx_sig()
+=pod
+
+=head2 vv_indx_sig()
+
+Returns a signature type for representing PDL indices.
+For PDL E<gt>= v2.007 this should be C<PDL_Index>, otherwise it will be C<int>.
+
+=cut
+
+sub vv_indx_sig {
+  require PDL::Core;
+  return defined(&PDL::indx) ? 'indx' : 'int';
+}
+
+##--------------------------------------------------------------
+## $sigtype = vv_indx_typedef()
+=pod
+
+=head2 vv_indx_typedef()
+
+Returns a C typedef for the C<PDL_Indx> type if running under
+PDL E<lt>= v2.007, otherwise just a comment.  You can call this
+from client PDL::PP modules as
+
+ pp_addhdr(PDL::VectorValued::Dev::vv_indx_typedef);
+
+=cut
+
+sub vv_indx_typedef {
+  require PDL::Core;
+  if (defined(&PDL::indx)) {
+    return "/*-- PDL_Indx built-in for PDL >= v2.007 --*/\n";
+  }
+  return "typedef int PDL_Indx; /*-- PDL_Indx typedef for PDL <= v2.007 --*/\n";
+}
+
+
+##======================================================================
+## PP Utilities: Macro Expansion
 =pod
 
 =head1 Macro Expansion Utilities

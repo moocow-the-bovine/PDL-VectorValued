@@ -7,6 +7,6 @@
 ##======================================================================
 
 package PDL::VectorValued;
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 1; ##-- make perl happy

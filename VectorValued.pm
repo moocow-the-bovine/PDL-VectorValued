@@ -20,6 +20,7 @@ our @EXPORT_OK =
    (@PDL::VectorValued::Utils::EXPORT_OK), ##-- inherited
    qw(vv_uniqvec),
    qw(rleND rldND),
+   qw(vv_indx),
   );
 our %EXPORT_TAGS =
   (
@@ -73,7 +74,7 @@ functions to higher-order PDLs which treat vectors as "data values".
 
 =for sig
 
-  Signature: (int v(N,M); [o]vu(N,MU))
+  Signature: (v(N,M); [o]vu(N,MU))
 
 =for ref
 
@@ -206,6 +207,34 @@ sub rldND {
   return $data;
 }
 
+##======================================================================
+## pod: Functions: datatype utilities
+=pod
+
+=head1 Datatype Utilities
+
+=cut
+
+##----------------------------------------------------------------------
+## vv_indx()
+=pod
+
+=head2 vv_indx
+
+=for sig
+
+  Signature: vv_indx()
+
+=for ref
+
+Returns PDL::Type subclass used for indices.
+If built with PDL E<lt> v2.007, this should return C<PDL::long>, otherwise C<PDL::indx>.
+
+=cut
+
+sub vv_indx {
+  return defined(&PDL::indx) ? PDL::indx(@_) : PDL::long(@_);
+}
 
 1; ##-- make perl happy
 

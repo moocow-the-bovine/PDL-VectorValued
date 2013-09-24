@@ -10,8 +10,11 @@ WriteMakefile(
 	      ABSTRACT     => 'Assorted utilities for vector-valued PDLs',
 	      AUTHOR       => 'Bryan Jurish',
 	      PREREQ_PM => {
-			    PDL => '2.4.2', ##-- ensure PDL-ability
+			    PDL => 0,
 			   },
+	      CONFIGURE_REQUIRES => {
+				     PDL => 0,
+				    },
 	      realclean => {
 			    FILES => '*~ *.tmp README.txt',
 			   },

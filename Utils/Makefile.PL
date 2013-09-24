@@ -8,7 +8,7 @@ $package = ['utils.pd','Utils','PDL::VectorValued::Utils'];
 
 $hash{AUTHOR}         = 'Bryan Jurish';
 $hash{VERSION_FROM}   = '../VectorValued/Version.pm',
-$hash{PREREQ_PM}{PDL} = '2.4.2'; ##-- ensure PDL-ability
+$hash{PREREQ_PM}{PDL} = $hash{CONFIGURE_REQUIRES}{PDL} = 0;
 #push(@{$hash{LIBS}}, '-lm');     ##-- ?
 #$hash{INC} .= '';
 #$hash{OBJECT} .= '';

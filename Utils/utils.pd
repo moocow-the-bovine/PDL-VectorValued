@@ -12,6 +12,11 @@ require "../VectorValued/Dev.pm";
 PDL::VectorValued::Dev->import();
 
 ##------------------------------------------------------
+## PDL_Indx type
+my $INDX = vv_indx_sig();
+pp_addhdr( vv_indx_typedef() );
+
+##------------------------------------------------------
 ## pm additions
 pp_addpm({At=>'Top'},<<'EOPM');
 
@@ -72,9 +77,9 @@ EOPM
 ##------------------------------------------------------
 ## rlevec()
 pp_def('rlevec',
-       Pars => 'c(M,N); int [o]a(N); [o]b(M,N)',
+       Pars => "c(M,N); $INDX \[o]a(N); [o]b(M,N)",
        Code =><<'EOC',
-  int cn,bn=0, sn=$SIZE(N), matches;
+  PDL_Indx cn,bn=0, sn=$SIZE(N), matches;
   loop (M) %{ $b(N=>0)=$c(N=>0); %}
   $a(N=>0) = 1;
   for (cn=1; cn<sn; cn++) {
@@ -334,8 +339,8 @@ foreach (keys %PDL::Types::typehash) {
 	return 0;
      }	
 
-      void pdl_vecval_qsortvec_$ppsym($ctype *xx, int n, int a, int b) {
-	int i,j, median_ind;
+      void pdl_vecval_qsortvec_$ppsym($ctype *xx, int n, PDL_Indx a, PDL_Indx b) {
+	PDL_Indx i,j, median_ind;
 
 	$ctype t;
 	i = a; 
@@ -344,9 +349,9 @@ foreach (keys %PDL::Types::typehash) {
 	median_ind = (i+j)/2;
 
 	do {
-	  while( pdl_vecval_cmpvec_$ppsym( &(xx[n*i]), &(xx[n*median_ind]), n )  <  0 ) 
+	  while( pdl_vecval_cmpvec_$ppsym( &(xx[n*i]), &(xx[n*median_ind]), n )  <  0 )
 		i++;
-	  while( pdl_vecval_cmpvec_$ppsym( &(xx[n*j]), &(xx[n*median_ind]), n )  >  0 ) 
+	  while( pdl_vecval_cmpvec_$ppsym( &(xx[n*j]), &(xx[n*median_ind]), n )  >  0 )
 		j--;
 	  if(i<=j) {
 		int k;
@@ -364,7 +369,7 @@ foreach (keys %PDL::Types::typehash) {
                 else if (median_ind==j)
                   median_ind=i;
 
-	        i++; 
+	        i++;
 		j--;
 	  }
 	} while (i <= j);
@@ -379,6 +384,11 @@ FOO
 	     );
 }
 
+my @vv_target_typechars = (qw(B S U L),
+			   (defined(&PDL::indx) ? 'N' : qw()),
+			   qw(Q F D),
+			  );
+
 # when copying the data over to the temporary array,
 # ignore the bad values and then only send the number
 # of good elements to the sort routines
@@ -387,14 +397,9 @@ sub generic_vecval_qsortvec {
     my $pdl = shift;
     my $ndim = shift;
     return
-      ('$TBSULQFD('
-       .'pdl_vecval_qsortvec_B,'
-       .'pdl_vecval_qsortvec_S,'
-       .'pdl_vecval_qsortvec_U,'
-       .'pdl_vecval_qsortvec_L,'
-       .'pdl_vecval_qsortvec_Q,'
-       .'pdl_vecval_qsortvec_F,'
-       .'pdl_vecval_qsortvec_D'
+      ('$T'.join('',@vv_target_typechars)
+       .'('
+       .join(',', map {'pdl_vecval_qsortvec_'.$_} @vv_target_typechars)
        .')'
        .' ($P('.$pdl.'), '.$ndim.', 0, nn);'
       );
@@ -437,8 +442,8 @@ foreach (keys %PDL::Types::typehash) {
 
     pp_addhdr(<<"FOO"
       /*-- vector-based sorted index acquisition --*/
-      void pdl_vecval_qsortvec_ind_$ppsym($ctype *xx, int *ix, int n, int a, int b) {
-	int i,j, median_ind, tmpi;
+      void pdl_vecval_qsortvec_ind_$ppsym($ctype *xx, PDL_Indx *ix, int n, PDL_Indx a, PDL_Indx b) {
+	PDL_Indx i,j, median_ind, tmpi;
 
 	$ctype t;
 	i = a;
@@ -463,7 +468,7 @@ foreach (keys %PDL::Types::typehash) {
                 else if (median_ind==j)
                   median_ind=i;
 
-	        i++; 
+	        i++;
 		j--;
 	  }
 	} while (i <= j);
@@ -482,14 +487,9 @@ sub generic_vecval_qsortvec_ind {
     my $ix  = shift;
     my $ndim = shift;
     return
-      ('$TBSULQFD('
-       .'pdl_vecval_qsortvec_ind_B,'
-       .'pdl_vecval_qsortvec_ind_S,'
-       .'pdl_vecval_qsortvec_ind_U,'
-       .'pdl_vecval_qsortvec_ind_L,'
-       .'pdl_vecval_qsortvec_ind_Q,'
-       .'pdl_vecval_qsortvec_ind_F,'
-       .'pdl_vecval_qsortvec_ind_D'
+      ('$T'.join('',@vv_target_typechars)
+       .'('
+       .join(',', map {'pdl_vecval_qsortvec_ind_'.$_} @vv_target_typechars)
        .')'
        .'($P('.$pdl.'), $P('.$ix.'), '.$ndim.', 0, nn);'
       );
@@ -498,9 +498,10 @@ sub generic_vecval_qsortvec_ind {
 pp_def(
     'vv_qsortveci',
     HandleBad => 1,
-    Pars => 'a(n,m); int [o]ix(m);',
-    Code => 
-    'int nn, nd, mi=0;
+    Pars => "a(n,m); $INDX \[o]ix(m);",
+    Code =>
+    'int nn, nd;
+     PDL_Indx mi=0;
      loop(m) %{ $ix() = mi++; %}
      nn = ($COMP(__m_size))-1;
      nd = $COMP(__n_size);
@@ -556,7 +557,7 @@ vvpp_def
 )),
    Code =>
 (q(
- long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
  $GENERIC() aval, bval;
  int cmpval;
  for ( ; nci < sizeNC; nci++) {
@@ -625,7 +626,7 @@ vvpp_def
 )),
    Code =>
 (q(
- long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
  $GENERIC() aval, bval;
  int cmpval;
  for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB; ) {
@@ -687,7 +688,7 @@ vvpp_def
 )),
    Code =>
 (q(
- long nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
  $GENERIC() aval, bval;
  int cmpval;
  for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB ; ) {
