@@ -1,6 +1,7 @@
-v0.07 Tue, 24 Sep 2013 13:12:27 +0200
+v0.07002 Wed, 25 Sep 2013 10:16:54 +0200 moocow
 	* PREREQ_PM{PDL}=CONFIGURE_REQUIRES{PDL}=0, for CPAN-testers friendliness
 	* added support for PDL v2.007 PDL_Indx type (64-bit indices)
+	* changed version convention X.BBCCC to jive with both pp_setversion() and version->parse()
 
 v0.06 2012-11-06  moocow
 	* added enumvec(): enumerate repetitions in a sorted vector list
