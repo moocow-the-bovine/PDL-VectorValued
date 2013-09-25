@@ -27,6 +27,7 @@ our %EXPORT_TAGS =
    Func => [@EXPORT_OK],               ##-- respect PDL conventions (hopefully)
   );
 
+#our ($VERSION);			       ##-- set by PDL::VectorValued::Version
 
 ##======================================================================
 ## pod: header

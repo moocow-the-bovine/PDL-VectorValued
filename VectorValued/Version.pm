@@ -6,7 +6,8 @@
 ##    runtime subsystems can use it
 ##======================================================================
 
-package PDL::VectorValued;
-our $VERSION = '0.07';
+package PDL::VectorValued::Version;
+our $VERSION = '0.07.001';
+$PDL::VectorValued::VERSION = $VERSION;
 
 1; ##-- make perl happy
