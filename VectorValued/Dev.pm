@@ -15,7 +15,8 @@ use strict;
 ## Export hacks
 #use PDL::PP; ##-- do NOT do this!
 use Exporter;
-our $VERSION = $PDL::VectorValued::Version;
+use PDL::VectorValued::Version;
+our $VERSION = $PDL::VectorValued::Version::VERSION;
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK =
