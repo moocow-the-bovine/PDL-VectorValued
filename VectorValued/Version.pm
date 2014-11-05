@@ -7,7 +7,7 @@
 ##======================================================================
 
 package PDL::VectorValued::Version;
-our $VERSION = '0.08';
+our $VERSION = '0.08001';
 $PDL::VectorValued::VERSION = $VERSION;
 
 1; ##-- make perl happy
