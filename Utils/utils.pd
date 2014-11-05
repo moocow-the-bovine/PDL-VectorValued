@@ -415,7 +415,9 @@ pp_def(
      loop(n,m) %{ $b() = $a(); %}
      nn = ($COMP(__m_size))-1;
      nd = $COMP(__n_size);
-    ' . generic_vecval_qsortvec('b','nd'),
+     if ($SIZE(m) > 0) {
+      '.generic_vecval_qsortvec('b','nd').'
+     }',
     Doc => '
 =for ref
 
@@ -505,7 +507,9 @@ pp_def(
      loop(m) %{ $ix() = mi++; %}
      nn = ($COMP(__m_size))-1;
      nd = $COMP(__n_size);
-    ' . generic_vecval_qsortvec_ind('a','ix','nd'),
+     if ($SIZE(m) > 0) {
+       '.generic_vecval_qsortvec_ind('a','ix','nd').'
+     }',
     Doc => '
 =for ref
 
