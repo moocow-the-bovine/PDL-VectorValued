@@ -732,6 +732,211 @@ EOD
   );
 
 
+
+##======================================================================
+## Sorted Vector Set Operations
+##======================================================================
+pp_addpm(<<'EOPM');
+
+=pod
+
+=head1 Sorted Vector Set Operations
+
+The following functions are provided for set operations on
+flat sorted PDLs with unique values.  They may be more efficient to compute
+than the corresponding implenentations via PDL::Primitive::setops().
+
+=cut
+
+EOPM
+
+##------------------------------------------------------
+## v_union() : flat set union
+vvpp_def
+  ('v_union',
+   Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::v_union {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::v_union(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
+   $nc = PDL->pdl(PDL::long(), $a->dim(0) + $b->dim(0)) if (!defined($nc));
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, ref($nc) ? $nc->sclr : $nc);
+   }
+   &PDL::_v_union_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->slice("0:".($nc->sclr-1));
+ }
+)),
+   Code =>
+(q(
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ int cmpval;
+ for ( ; nci < sizeNC; nci++) {
+   if (nai < sizeNA && nbi < sizeNB) {
+     cmpval = $CMPVAL('$a(NA=>nai)', '$b(NB=>nbi)');
+   }
+   else if (nai < sizeNA) { cmpval = -1; }
+   else if (nbi < sizeNB) { cmpval =  1; }
+   else                   { break; }
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     $c(NC=>nci) = $a(NA=>nai);
+     nai++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     $c(NC=>nci) = $b(NB=>nbi);
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     $c(NC=>nci) = $a(NA=>nai);
+     nai++;
+     nbi++;
+   }
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Union of two flat sorted unique-valued PDLs.
+Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicates.
+On return, $nc() holds the actual number of values in the union.
+
+In scalar context, slices $c() to the actual number of elements in the union
+and returns the sliced PDL.
+
+EOD
+  );
+
+
+##------------------------------------------------------
+## v_intersect() : flat set intersection
+vvpp_def
+  ('v_intersect',
+   Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::v_intersect {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::v_intersect(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
+   my $NA = $a->dim(0);
+   my $NB = $b->dim(0);
+   $nc = PDL->pdl(PDL::long(), $NA < $NB ? $NA : $NB) if (!defined($nc));
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, ref($nc) ? $nc->sclr : $nc);
+   }
+   &PDL::_v_intersect_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->slice("0:".($nc->sclr-1));
+ }
+)),
+   Code =>
+(q(
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ int cmpval;
+ for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB; ) {
+   cmpval = $CMPVAL('$a(NA=>nai)','$b(NB=>nbi)');
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     nai++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     $c(NC=>nci) = $a(NA=>nai);
+     nai++;
+     nbi++;
+     nci++;
+   }
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Intersection of two flat sorted unique-valued PDLs.
+Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicates.
+On return, $nc() holds the actual number of values in the intersection.
+
+In scalar context, slices $c() to the actual number of elements in the intersection
+and returns the sliced PDL.
+
+EOD
+  );
+
+
+##------------------------------------------------------
+## v_setdiff() : flat set difference
+vvpp_def
+  ('v_setdiff',
+   Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   PMCode=>
+(q(
+ sub PDL::v_setdiff {
+   my ($a,$b,$c,$nc) = @_;
+   barf("PDL::VectorValued::v_setdiff(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
+   my $NA = $a->dim(0);
+   my $NB = $b->dim(0);
+   $nc    = PDL->pdl(PDL::long(), $NA) if (!defined($nc));
+   if (!defined($c)) {
+     my $ctype = $a->type > $b->type ? $a->type : $b->type;
+     $c = PDL->zeroes($ctype, $NA);
+   }
+   &PDL::_v_setdiff_int($a,$b,$c,$nc);
+   return ($c,$nc) if (wantarray);
+   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+ }
+)),
+   Code =>
+(q(
+ PDL_Indx nai=0, nbi=0, nci=0, sizeNA=$SIZE(NA), sizeNB=$SIZE(NB), sizeNC=$SIZE(NC);
+ int cmpval;
+ for ( ; nci < sizeNC && nai < sizeNA && nbi < sizeNB ; ) {
+   cmpval = $CMPVAL('$a(NA=>nai)','$b(NB=>nbi)');
+   //
+   if (cmpval < 0) {
+     //-- CASE: a < b
+     $c(NC=>nci) = $a(NA=>nai);
+     nai++;
+     nci++;
+   }
+   else if (cmpval > 0) {
+     //-- CASE: a > b
+     nbi++;
+   }
+   else {
+     //-- CASE: a == b
+     nai++;
+     nbi++;
+   }
+ }
+ for ( ; nci < sizeNC && nai < sizeNA ; nai++,nci++ ) {
+   $c(NC=>nci) = $a(NA=>nai);
+ }
+ $nc() = nci;
+)),
+   Doc=><<'EOD'
+
+Set-difference ($a() \ $b()) of two flat sorted unique-valued PDLs.
+Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicate values.
+On return, $nc() holds the actual number of values in the computed vector set.
+
+In scalar context, slices $c() to the actual number of elements in the output set
+and returns the sliced PDL.
+
+EOD
+  );
+
+
 ##======================================================================
 ## Footer Administrivia
 ##======================================================================
@@ -806,7 +1011,7 @@ the file.
 
 =item *
 
-All other parts copyright (c) 2007, Bryan Jurish.  All rights reserved.
+All other parts copyright (c) 2007-2015, Bryan Jurish.  All rights reserved.
 
 This package is free software, and entirely without warranty.
 You may redistribute it and/or modify it under the same terms

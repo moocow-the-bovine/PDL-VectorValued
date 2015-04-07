@@ -31,6 +31,7 @@ our @EXPORT_OK =
    ##-- Macro expansion subs
    qw(vvpp_pdlvar_basename),
    qw(vvpp_expand_cmpvec vvpp_cmpvec_code),
+   qw(vvpp_expand_cmpval vvpp_cmpval_code),
   );
 our %EXPORT_TAGS =
   (
@@ -109,6 +110,7 @@ Currently known PDL::VectorValued macros include:
   MACRO_NAME            EXPANSION_SUBROUTINE
   ----------------------------------------------------------------------
   $CMPVEC(...)          vvpp_expand_cmpvec(...)
+  $CMPVAL(...)          vvpp_expand_cmpval(...)
 
 See the documentation of the individual expansion subroutines
 for details on calling conventions.
@@ -127,6 +129,7 @@ string.
 our @MACROS =
     (
      \&vvpp_expand_cmpvec,
+     \&vvpp_expand_cmpval,
      ##
      ## ... more macros here
      );
@@ -146,6 +149,14 @@ sub vvpp_expand_cmpvec {
   my $str = shift;
   #$str =~ s{\$CMPVEC\s*\(([^\)]*)\)}{vvpp_cmpvec_code(eval($1))}esg; ##-- nope
   $str =~ s{\$CMPVEC\s*\((.*)\)}{vvpp_cmpvec_code(eval($1))}emg; ##-- single-line macros ONLY
+  return $str;
+}
+
+##--------------------------------------------------------------
+## $pp_code = vvpp_expand_cmpval($vvpp_code)
+sub vvpp_expand_cmpval {
+  my $str = shift;
+  $str =~ s{\$CMPVAL\s*\((.*)\)}{vvpp_cmpval_code(eval($1))}emg; ##-- single-line macros ONLY
   return $str;
 }
 
@@ -324,6 +335,53 @@ sub vvpp_cmpvec_code {
   return $ppcode;
 }
 
+##--------------------------------------------------------------
+## vvpp_cmpval_code()
+=pod
+
+=head2 vvpp_cmpval_code($val1,$val2)
+
+Returns PDL::PP expression code for lexicographically comparing two values
+C<$val1> and C<$val2>, storing the
+comparsion result in the C variable C<$retvar>,
+similar to what:
+
+ ($vec1 <=> $vec2);
+
+"ought to" do.
+
+Parameters:
+
+=over 4
+
+=item $val1
+
+=item $val2
+
+PDL::PP string forms of values to be compared.
+Need not be physical.
+
+=back
+
+=cut
+
+sub vvpp_cmpval_code {
+  my ($val1,$val2) = @_;
+  ##
+  ##-- sanity checks
+  my $USAGE = 'vvpp_cmpval_code($val1,$val2)';
+  die ("Usage: $USAGE") if (grep {!defined($_)} @_[0,1]);
+  ##
+  ##-- generate comparison code
+  my $ppcode = (''
+		."/*-- BEGIN vvpp_cmpval_code --*/ "
+		." (($val1) < ($val2) ? -1 : (($val1) > ($val2) ? 1 : 0)) "
+		." /*-- END vvpp_cmpvec_code --*/"
+	       );
+  ##
+  ##-- ... and return
+  return $ppcode;
+}
 
 
 1; ##-- make perl happy
