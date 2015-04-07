@@ -767,7 +767,7 @@ vvpp_def
    }
    &PDL::_v_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->slice("0:".($nc->sclr-1));
+   return $c->reshape($nc->sclr);
  }
 )),
    Code =>
@@ -807,8 +807,7 @@ Union of two flat sorted unique-valued PDLs.
 Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicates.
 On return, $nc() holds the actual number of values in the union.
 
-In scalar context, slices $c() to the actual number of elements in the union
-and returns the sliced PDL.
+In scalar context, reshapes $c() to the actual number of elements in the union and returns it.
 
 EOD
   );
@@ -833,7 +832,7 @@ vvpp_def
    }
    &PDL::_v_intersect_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->slice("0:".($nc->sclr-1));
+   return $c->reshape($nc->sclr);
  }
 )),
    Code =>
@@ -867,8 +866,7 @@ Intersection of two flat sorted unique-valued PDLs.
 Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicates.
 On return, $nc() holds the actual number of values in the intersection.
 
-In scalar context, slices $c() to the actual number of elements in the intersection
-and returns the sliced PDL.
+In scalar context, reshapes $c() to the actual number of elements in the intersection and returns it.
 
 EOD
   );
@@ -893,7 +891,7 @@ vvpp_def
    }
    &PDL::_v_setdiff_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+   return $c->reshape($nc->sclr);
  }
 )),
    Code =>
@@ -930,8 +928,7 @@ Set-difference ($a() \ $b()) of two flat sorted unique-valued PDLs.
 Input PDLs $a() and $b() B<MUST> be sorted in lexicographic order and contain no duplicate values.
 On return, $nc() holds the actual number of values in the computed vector set.
 
-In scalar context, slices $c() to the actual number of elements in the output set
-and returns the sliced PDL.
+In scalar context, reshapes $c() to the actual number of elements in the difference set and returns it.
 
 EOD
   );
