@@ -484,7 +484,7 @@ sub vvpp_lb_code {
   $ppcode .= join("\n",
 		  " $lovar = $imin;",
 		  " $hivar = $imax;",
-		  ($ubmaxvar ? " $ubmaxvar = -1;" : qw()),
+		  #($ubmaxvar ? " $ubmaxvar = -1;" : qw()),
 		  " while ($hivar - $lovar > 1) {",
 		  "   $midvar = ($hivar + $lovar) >> 1;",
 		  "   $cmpvar = ".vvpp_cmpval_code($find, $val_mid).";",
