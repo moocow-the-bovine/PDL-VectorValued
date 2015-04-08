@@ -308,7 +308,7 @@ EOD
 ## qsortvec drop-in replacement
 ##  + adopted from patched $PDL_SRC_ROOT/Basic/Ufunc/ufunc.pd
 ##     - nearly a verbatim copy: C names have been changed to protect the innocent
-##  + includes Chriss Marshall's "uniqsortvec" patch, from:
+##  + includes Chris Marshall's "uniqsortvec" patch, from:
 ##     http://sourceforge.net/tracker/index.php?func=detail&aid=1548824&group_id=612&atid=300612
 ##======================================================================
 

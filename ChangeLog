@@ -1,3 +1,14 @@
+v0.09001 Wed, 08 Apr 2015 10:58:04 +0200 moocow
+	* added $CMPVAL() and $LB() macros
+	* added v_{union,intersect,setdiff} set operations for flat, sorted, unique-valued PDLs
+	  - new implementation is much faster than builtin PDL::Primitive::intersect() [via PDL::Primitive::setops()]
+	  - for large-ish intersection (NA=2973, NB=221013) v_intersect($a,qsort($b)) is 2x faster than setops($a,'AND',$b),
+	    and v_intersect($a,$b) with all data pre-sorted $b is 42x faster than setops($a,'AND',$b)
+
+v0.08001 2014-11-05  moocow
+	* fix annoying PAUSE messages about incompatible version numbers
+	* improved handling of empty pdls
+
 v0.07002 Wed, 25 Sep 2013 10:16:54 +0200 moocow
 	* PREREQ_PM{PDL}=CONFIGURE_REQUIRES{PDL}=0, for CPAN-testers friendliness
 	* added support for PDL v2.007 PDL_Indx type (64-bit indices)

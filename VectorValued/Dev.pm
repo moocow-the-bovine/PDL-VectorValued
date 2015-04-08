@@ -111,6 +111,7 @@ Currently known PDL::VectorValued macros include:
   ----------------------------------------------------------------------
   $CMPVEC(...)          vvpp_expand_cmpvec(...)
   $CMPVAL(...)          vvpp_expand_cmpval(...)
+  $LB(...)              vvpp_expand_lb(...)
 
 See the documentation of the individual expansion subroutines
 for details on calling conventions.
@@ -130,6 +131,7 @@ our @MACROS =
     (
      \&vvpp_expand_cmpvec,
      \&vvpp_expand_cmpval,
+     \&vvpp_expand_lb,
      ##
      ## ... more macros here
      );
@@ -160,6 +162,14 @@ sub vvpp_expand_cmpval {
   return $str;
 }
 
+##--------------------------------------------------------------
+## $pp_code = vvpp_expand_lb($vvpp_code)
+sub vvpp_expand_lb {
+  my $str = shift;
+  $str =~ s{\$LB\s*\((.*)\)}{vvpp_lb_code(eval($1))}emg; ##-- single-line macros ONLY
+  return $str;
+}
+
 ##======================================================================
 ## PP Utilities: Types
 =pod
@@ -175,7 +185,7 @@ sub vvpp_expand_cmpval {
 =head2 vv_indx_sig()
 
 Returns a signature type for representing PDL indices.
-For PDL E<gt>= v2.007 this should be C<PDL_Index>, otherwise it will be C<int>.
+For PDL E<gt>= v2.007 this should be C<PDL_Indx>, otherwise it will be C<int>.
 
 =cut
 
@@ -383,6 +393,118 @@ sub vvpp_cmpval_code {
   return $ppcode;
 }
 
+##--------------------------------------------------------------
+## vvpp_lb_code()
+=pod
+
+=head2 vvpp_lb_code($find,$vals, $imin,$imax, $retvar, %options)
+
+Returns PDL::PP code for binary lower-bound search for the value $find() in the sorted pdl $vals($imin:$imax-1).
+Parameters:
+
+=over 4
+
+=item $find
+
+Value to search for or PDL::PP string form of such a value.
+
+=item $vals
+
+PDL::PP string form of PDL to be searched. $vals should contain a placeholder C<$_>
+representing the dimension to be searched.
+
+=item $retvar
+
+Name of a C variable to store the result.
+On return, C<$retvar> holds the maximum value for C<$_> in C<$vals($imin:$imax-1)> such that
+C<$vals($_=$retvar) E<lt>= $find> and C<$vals($_=$j) E<lt> $find> for all
+C<$j> with C<$imin E<lt>= $j E<lt> $retvar>, or C<$imin> if no such value for C<$retvar> exists,
+C<$imin E<lt>= $retvar E<lt> $imax>.
+In other words,
+returns the least index $_ of a match for $find in $vals($imin:$imax-1) whenever a match exists,
+otherwise the greatest index whose value in $vals($imin:$imax-1) is strictly less than $find if that exists,
+and $imin if all values in $vals($imin:$imax-1) are strictly greater than $find.
+
+=item $options{lovar}
+
+=item $options{hivar}
+
+=item $options{midvar}
+
+=item $options{cmpvar}
+
+If specified, temporary indices and comparison values will be stored in
+in the C variables $options{lovar}, $options{hivar}, $options{midvar}, and $options{cmpvar}.
+If unspecified, new locally scoped C variables
+C<_vvpp_lb_loval> etc. will be declared and used.
+
+=item $options{ubmaxvar}
+
+If specified, should be a C variable to hold the index of the last inspected value for $_
+in $vals($imin:$imax-1) strictly greater than $find.
+
+=back
+
+=cut
+
+sub vvpp_lb_code {
+  my ($find,$vals,$imin,$imax,$retvar,%opts) = @_;
+  ##
+  ##-- sanity checks
+  my $USAGE = 'vvpp_lb_code($find,$vals,$imin,$imax,$retvar,%opts)';
+  die ("Usage: $USAGE") if (grep {!defined($_)} @_[0..4]);
+  ##
+  ##-- get PDL variable basenames
+  my $ppcode = "\n{ /*-- BEGIN vvpp_lb_code --*/\n";
+  ##
+  ##-- get C variables
+  my ($lovar,$hivar,$midvar,$cmpvar);
+  if (!defined($lovar=$opts{lovar})) {
+      $lovar   = '_vvpp_lb_loval';
+      $ppcode .= " long $lovar;";
+  }
+  if (!defined($hivar=$opts{hivar})) {
+      $hivar   = '_vvpp_lb_hival';
+      $ppcode .= " long $hival;"
+  }
+  if (!defined($midvar=$opts{midvar})) {
+      $midvar  = '_vvpp_lb_midval';
+      $ppcode .= " long $midvar;"
+  }
+  if (!defined($cmpvar=$opts{cmpvar})) {
+      $cmpvar  = '_vvpp_lb_cmpval';
+      $ppcode .= " int $cmpval;"
+  }
+  my $ubmaxvar = $opts{ubmaxvar};
+  ##
+  ##-- generate search code
+  (my $val_mid = $vals) =~ s/\$_/${midvar}/;
+  (my $val_lo  = $vals) =~ s/\$_/${lovar}/;
+  (my $val_hi  = $vals) =~ s/\$_/${hivar}/;
+  $ppcode .= join("\n",
+		  " $lovar = $imin;",
+		  " $hivar = $imax;",
+		  ($ubmaxvar ? " $ubmaxvar = -1;" : qw()),
+		  " while ($hivar - $lovar > 1) {",
+		  "   $midvar = ($hivar + $lovar) >> 1;",
+		  "   $cmpvar = ".vvpp_cmpval_code($find, $val_mid).";",
+		  "   if ($cmpvar > 0) { $lovar = $midvar; }",
+		  ($ubmaxvar
+		   ? "   else if ($cmpvar < 0) { $hivar = $midvar; $ubmaxvar = $midvar; }"
+		   : qw()),
+		  "   else             { $hivar = $midvar; }",
+		  " }",
+		  " if      (                   $val_lo == $find) $retvar = $lovar;",
+		  " else if ($hivar <  $imax && $val_hi == $find) $retvar = $hivar;",
+		  " else if ($lovar >= $imin && $val_lo <  $find) $retval = $lovar;",
+		  " else                                          $retval = $imin;",
+		  ."} /*-- END vvpp_lb_code --*/\n"
+	     );
+  ##
+  ##-- ... and return
+  return $ppcode;
+}
+
 
 1; ##-- make perl happy
 
@@ -434,7 +556,7 @@ PDL by Karl Glazebrook, Tuomas J. Lukka, Christian Soeller, and others.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007, Bryan Jurish.  All rights reserved.
+Copyright (c) 2007-2015, Bryan Jurish.  All rights reserved.
 
 This package is free software.  You may redistribute it
 and/or modify it under the same terms as Perl itself.

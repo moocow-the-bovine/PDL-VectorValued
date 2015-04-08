@@ -7,7 +7,7 @@
 ##======================================================================
 
 package PDL::VectorValued::Version;
-our $VERSION = '0.09000';
+our $VERSION = '0.09001';
 $PDL::VectorValued::VERSION = $VERSION;
 $PDL::VectorValued::Dev::VERSION = $VERSION;
 
