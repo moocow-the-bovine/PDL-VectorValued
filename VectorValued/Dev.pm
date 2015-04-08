@@ -465,15 +465,15 @@ sub vvpp_lb_code {
   }
   if (!defined($hivar=$opts{hivar})) {
       $hivar   = '_vvpp_lb_hival';
-      $ppcode .= " long $hival;"
+      $ppcode .= " long $hivar;";
   }
   if (!defined($midvar=$opts{midvar})) {
       $midvar  = '_vvpp_lb_midval';
-      $ppcode .= " long $midvar;"
+      $ppcode .= " long $midvar;";
   }
   if (!defined($cmpvar=$opts{cmpvar})) {
       $cmpvar  = '_vvpp_lb_cmpval';
-      $ppcode .= " int $cmpval;"
+      $ppcode .= " int $cmpvar;";
   }
   my $ubmaxvar = $opts{ubmaxvar};
   ##
@@ -496,10 +496,10 @@ sub vvpp_lb_code {
 		  " }",
 		  " if      (                   $val_lo == $find) $retvar = $lovar;",
 		  " else if ($hivar <  $imax && $val_hi == $find) $retvar = $hivar;",
-		  " else if ($lovar >= $imin && $val_lo <  $find) $retval = $lovar;",
-		  " else                                          $retval = $imin;",
-		  ."} /*-- END vvpp_lb_code --*/\n"
-	     );
+		  " else if ($lovar >= $imin && $val_lo <  $find) $retvar = $lovar;",
+		  " else                                          $retvar = $imin;",
+		  "} /*-- END vvpp_lb_code --*/\n",
+		 );
   ##
   ##-- ... and return
   return $ppcode;
