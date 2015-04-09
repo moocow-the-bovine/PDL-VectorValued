@@ -15,7 +15,14 @@ use strict;
 ## Export hacks
 #use PDL::PP; ##-- do NOT do this!
 use Exporter;
-use PDL::VectorValued::Version;
+
+##-- hack: we can't just 'use PDL::VectorValued::Version;' because PDL::VectorValued::utils.pd needs to include this package
+BEGIN {
+  if (!defined($PDL::VectorValued::VERSION)) {
+    require 'PDL/VectorValued/Version.pm';
+    print STDERR __PACKAGE__, ": got PDL::VectorValued::Version from ", $INC{"PDL/VectorValued/Version.pm"}, "\n";
+  }
+}
 #our ($VERSION); ##-- set by PDL::VectorValued::Version
 
 our @ISA = qw(Exporter);
