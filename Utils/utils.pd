@@ -130,10 +130,8 @@ pp_def('rldvec',
        Pars => 'int a(N); b(M,N); [o]c(M,N)',
        PMCode=><<'EOC',
 sub PDL::rldvec {
-  my ($a,$b) = @_; 
-  my ($c);
-  if ($#_==2) { $c=$_[2]; }
-  else {
+  my ($a,$b,$c) = @_;
+  if (!defined($c)) {
 # XXX Need to improve emulation of threading in auto-generating c
     my ($rowlen) = $b->dim(0);
     my ($size) = $a->sumover->max;
@@ -174,9 +172,9 @@ EOD
 pp_def('enumvec',
        Pars => 'v(M,N); int [o]k(N)',
        Code =><<'EOC',
-  int vn, sn=$SIZE(N), matches, kn;
+  int vn, kn, sn=$SIZE(N), matches;
   for (vn=0; vn<sn; vn=kn) {
-     for (kn=vn, matches=1; matches && kn<sn; ) {
+     for (kn=vn, matches=1; matches && vn<sn; ) {
        $k(N=>kn) = kn-vn;
        ++kn;
        loop (M) %{
@@ -194,9 +192,129 @@ Enumerate a list of vectors with locally unique keys.
 Given a sorted list of vectors $v, generate a vector $k containing locally unique keys for the elements of $v
 (where an "element" is a vector of length $M ocurring in $v).
 
+Note that the keys returned in $k are only unique over a run of a single vector in $v,
+so that each unique vector in $v has at least one 0 (zero) index in $k associated with it.
+If you need global keys, see enumvecg().
+
 EOD
 
 );
+
+##------------------------------------------------------
+## enumvecg()
+pp_def('enumvecg',
+       Pars => 'v(M,N); int [o]k(N)',
+       Code =><<'EOC',
+  int vn, vnprev, sn=$SIZE(N), ki;
+  if (sn > 0) {
+    $k(N=>0) = ki = 0;
+    for (vnprev=0, vn=1; vn<sn; vnprev=vn++) {
+       loop (M) %{
+         if ($v(N=>vnprev) != $v(N=>vn)) {
+           ++ki;
+           break;
+         }
+       %}
+       $k(N=>vn) = ki;
+     }
+   }
+EOC
+       Doc =><<'EOD',
+Enumerate a list of vectors with globally unique keys.
+
+Given a sorted list of vectors $v, generate a vector $k containing globally unique keys for the elements of $v
+(where an "element" is a vector of length $M ocurring in $v).
+Basically does the same thing as:
+
+ $k = $v->vsearchvec($v->uniqvec);
+
+... but somewhat more efficiently.
+
+EOD
+
+);
+
+##------------------------------------------------------
+## rleseq()
+pp_def('rleseq',
+       Pars => "c(N); $INDX \[o]a(N); [o]b(N)",
+       Code=><<'EOC',
+  PDL_Indx j=0, sizeN=$SIZE(N);
+  $GENERIC(c) coff;
+  coff     = $c(N=>0);
+  $b(N=>0) = coff;
+  $a(N=>0) = 0;
+  loop (N) %{
+    if ($c() == coff+$a(N=>j)) {
+      $a(N=>j)++;
+    } else {
+      j++;
+      $b(N=>j) = coff = $c();
+      $a(N=>j) = 1;
+    }
+  %}
+  for (j++; j<sizeN; j++) {
+    $a(N=>j) = 0;
+    $b(N=>j) = 0;
+  }
+EOC
+       Doc =><<'EOD',
+Run-length encode a vector of subsequences.
+
+Given a vector of $c() of concatenated variable-length, variable-offset subsequences,
+generate a vector $a containing the length of each subsequence
+and a vector $b containg the subsequence offsets.
+As for rle(), only the elements up to the first instance of 0 in $a should be considered.
+
+See also PDL::Slices::rle.
+
+EOD
+
+);
+
+
+##------------------------------------------------------
+## rldseq()
+pp_def('rldseq',
+       Pars => 'int a(N); b(N); [o]c(M)',
+       PMCode=><<'EOC',
+sub PDL::rldseq {
+  my ($a,$b,$c) = @_;
+  if (!defined($c)) {
+    my $size   = $a->sumover->max;
+    my (@dims) = $a->dims;
+    shift(@dims);
+    $c = $b->zeroes($b->type,$size,@dims);
+  }
+  &PDL::_rldseq_int($a,$b,$c);
+  return $c;
+}
+EOC
+       Code =><<'EOC',
+  size_t mi=0;
+  loop (N) %{
+    size_t     len = $a(), li;
+    for (li=0; li < len; ++li, ++mi) {
+      $c(M=>mi) = $b() + li;
+    }
+  %}
+EOC
+       Doc =><<'EOD'
+Run-length decode a subsequence vector.
+
+Given a vector $a() of sequence lengths
+and a vector $b() of corresponding offsets,
+decode concatenation of subsequences to $c(),
+as for:
+
+ $c = null;
+ $c = $c->append($b($_)+sequence($a->type,$a($_))) foreach (0..($N-1));
+
+See also: PDL::Slices::rld.
+
+EOD
+
+  );
 
 
 ##======================================================================
