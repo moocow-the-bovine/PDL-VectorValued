@@ -1,3 +1,6 @@
+v1.0.3 Tue, 04 Aug 2015 12:19:25 +0200 moocow
+	* enumvec() regression fix
+
 v1.0.2 Wed, 29 Jul 2015 10:05:34 +0200 moocow
 	* enumvecg() fix
 

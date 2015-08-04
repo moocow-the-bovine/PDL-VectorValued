@@ -174,7 +174,7 @@ pp_def('enumvec',
        Code =><<'EOC',
   int vn, kn, sn=$SIZE(N), matches;
   for (vn=0; vn<sn; vn=kn) {
-     for (kn=vn, matches=1; matches && vn<sn; ) {
+     for (kn=vn, matches=1; matches && kn<sn; ) {
        $k(N=>kn) = kn-vn;
        ++kn;
        loop (M) %{
