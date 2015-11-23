@@ -1,3 +1,9 @@
+v1.0.4 Mon, 23 Nov 2015 12:10:32 +0100 moocow
+	* shared $VERSION now via perl-revision script from Perl::Version (debian libperl-version-perl)
+	  as suggested by Corion in thread http://www.perlmonks.org/?node_id=1148116
+	* may or may not help with weird errors building PDL::Ngrams with stale PDL::VectorValued,
+	  - new version of PDL::VectorValued will probably mask that bug anyways
+
 v1.0.3 Tue, 04 Aug 2015 12:19:25 +0200 moocow
 	* enumvec() regression fix
 

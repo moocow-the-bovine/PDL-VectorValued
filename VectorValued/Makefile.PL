@@ -8,7 +8,8 @@ our $has_readme_pod  = grep {-e $_ } (<README.pod>, <README.POD>, <README.rpod>)
 our $has_pdlpp       = grep {-e $_ } (<*.pd>);
 WriteMakefile(
 	      NAME=>'PDL::VectorValued::Dev',
-	      VERSION_FROM => 'Version.pm',
+	      VERSION_FROM => '../VectorValued.pm',
+	      LICENSE => 'perl',
 	      #PM => { (map {$_=>"\$(INST_LIBDIR)/CCS/$_"} <*.pm>), },
 	      realclean=>{ FILES=>$realclean_files, },
 	      DIR =>[

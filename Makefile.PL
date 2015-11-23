@@ -6,9 +6,10 @@ pdlmaker_init();
 
 WriteMakefile(
 	      NAME         => 'PDL::VectorValued',
-	      VERSION_FROM => 'VectorValued/Version.pm',
+	      VERSION_FROM => 'VectorValued.pm',
 	      ABSTRACT     => 'Assorted utilities for vector-valued PDLs',
 	      AUTHOR       => 'Bryan Jurish',
+	      LICENSE      => 'perl',
 	      PREREQ_PM => {
 			    PDL => 0,
 			   },
