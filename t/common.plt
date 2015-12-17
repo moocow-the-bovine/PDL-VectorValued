@@ -20,7 +20,7 @@ sub isok {
 sub skipok {
   my ($label,$skip_if_true) = splice(@_,0,2);
   if ($skip_if_true) {
-    isok("$label - SKIPPED ($skip_if_true)",1);
+    subtest $label => sub { plan skip_all => $skip_if_true; };
   } else {
     if (@_==1 && ref($_[0]) && ref($_[0]) eq 'CODE') {
       isok($label, $_[0]->());
@@ -34,7 +34,7 @@ sub skipok {
 sub skipordo {
   my ($label,$skip_if_true) = splice(@_,0,2);
   if ($skip_if_true) {
-    isok("$label - SKIPPED ($skip_if_true)",1);
+    subtest $label => sub { plan skip_all => $skip_if_true; };
   } else {
     $_[0]->(@_[1..$#_]);
   }
