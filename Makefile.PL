@@ -12,6 +12,7 @@ WriteMakefile(
 	      LICENSE      => 'perl',
 	      PREREQ_PM => {
 			    PDL => 0,
+			    'Test::More' => 0,
 			   },
 	      CONFIGURE_REQUIRES => {
 				     PDL => 0,
