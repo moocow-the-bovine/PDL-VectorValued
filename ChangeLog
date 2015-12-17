@@ -2,6 +2,7 @@ v1.0.5 Thu, 17 Dec 2015 10:02:25 +0100 moocow
 	* fixed wrongly succeeding bogus tests with unary ok()
 	  - tests now use Test::More and re-factored common test subroutines
 	* pdlmaker.plm doesn't distribute generated PM files any more (PDL now does this for us)
+	* added vector-cosine similarity vv_vcos()
 
 v1.0.4 Mon, 23 Nov 2015 12:10:32 +0100 moocow
 	* shared $VERSION now via perl-revision script from Perl::Version (debian libperl-version-perl)
