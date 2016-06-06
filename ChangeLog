@@ -1,3 +1,6 @@
+v1.0.6 Mon, 06 Jun 2016 11:29:23 +0200 moocow
+	* win32/NaN fixes for tests (RT bug #115076)
+
 v1.0.5 Thu, 17 Dec 2015 10:02:25 +0100 moocow
 	* fixed wrongly succeeding bogus tests with unary ok()
 	  - tests now use Test::More and re-factored common test subroutines

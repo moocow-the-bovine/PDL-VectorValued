@@ -34,8 +34,9 @@ pdlapprox("vv_vcos:threaded", $a->vv_vcos($b->slice(",*3")), $c_want->slice(",*3
 
 ##-- 3: vcos: nullvec: a
 my $a0 = $a->pdl;
+my $nan = $^O =~ /MSWin32/i ? ((99**99)**99) - ((99**99)**99) : 'nan';
 (my $tmp=$a0->slice(",1")) .= 0;
-pdlapprox("vv_vcos:nullvec:a:nan", $a0->vv_vcos($b), pdl([1,'nan',-1]), 1e-4);
+pdlapprox("vv_vcos:nullvec:a:nan", $a0->vv_vcos($b), pdl([1,$nan,-1]), 1e-4);
 
 ##-- 4: vcos: nullvec: b
 my $b0 = $b->zeroes;
