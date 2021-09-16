@@ -5,7 +5,7 @@
 ##======================================================================
 
 #require "../VectorValued/Version.pm"; ##-- use perl-reversion from Perl::Version instead
-my $VERSION = '1.0.10';
+my $VERSION = '1.0.11';
 pp_setversion($VERSION);
 
 require "../VectorValued/Dev.pm";
@@ -536,8 +536,8 @@ pp_def(
     'int nn;
      int nd;
      loop(n,m) %{ $b() = $a(); %}
-     nn = ($COMP(__m_size))-1;
-     nd = $COMP(__n_size);
+     nn = ($SIZE(m))-1;
+     nd = $SIZE(n);
      if ($SIZE(m) > 0) {
       '.generic_vecval_qsortvec('b','nd').'
      }',
@@ -633,8 +633,8 @@ pp_def(
     'int nn, nd;
      PDL_Indx mi=0;
      loop(m) %{ $ix() = mi++; %}
-     nn = ($COMP(__m_size))-1;
-     nd = $COMP(__n_size);
+     nn = ($SIZE(m))-1;
+     nd = $SIZE(n);
      if ($SIZE(m) > 0) {
        '.generic_vecval_qsortvec_ind('a','ix','nd').'
      }',

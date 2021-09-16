@@ -20,4 +20,15 @@ WriteMakefile(
 	      realclean => {
 			    FILES => join(' ', qw(*~ *.tmp),(-e 'README.rpod' ? 'README.txt' : qw())),
 			   },
+	      META_MERGE => {
+			     "meta-spec" => { version => 2 },
+			     resources => {
+					   repository => {
+							  url => 'git://github.com/moocow-the-bovine/PDL-VectorValued.git',
+							  type => 'git',
+							  web => 'https://github.com/moocow-the-bovine/PDL-VectorValued',
+							 },
+					  },
+			    },
+
 	     );
