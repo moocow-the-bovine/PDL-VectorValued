@@ -45,19 +45,8 @@ AUTHOR
     Bryan Jurish <moocow@cpan.org>
 
 COPYRIGHT
-    *   Code for qsortvec() copyright (C) Tuomas J. Lukka 1997.
-        Contributions by Christian Soeller (c.soeller@auckland.ac.nz) and
-        Karl Glazebrook (kgb@aaoepp.aao.gov.au). All rights reserved. There
-        is no warranty. You are allowed to redistribute this software /
-        documentation under certain conditions. For details, see the file
-        COPYING in the PDL distribution. If this file is separated from the
-        PDL distribution, the copyright notice should be included in the
-        file.
+    Copyright (c) 2007-2021, Bryan Jurish. All rights reserved.
 
-    *   All other parts copyright (c) 2007-2021, Bryan Jurish. All rights
-        reserved.
-
-        This package is free software, and entirely without warranty. You
-        may redistribute it and/or modify it under the same terms as Perl
-        itself.
+    This package is free software, and entirely without warranty. You may
+    redistribute it and/or modify it under the same terms as Perl itself.
 
