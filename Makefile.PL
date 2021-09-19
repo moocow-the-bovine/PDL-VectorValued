@@ -11,7 +11,7 @@ WriteMakefile(
 	      AUTHOR       => 'Bryan Jurish',
 	      LICENSE      => 'perl',
 	      PREREQ_PM => {
-			    PDL => 0,
+			    PDL => 2.019,
 			    'Test::More' => 0,
 			   },
 	      CONFIGURE_REQUIRES => {
