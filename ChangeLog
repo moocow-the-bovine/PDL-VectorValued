@@ -2,6 +2,11 @@
 ##
 ## Change log for perl distribution PDL::VectorValued
 
+v1.0.12 Sun, 19 Sep 2021 21:24:50 +0200 moocow
+	* removed stale vv_qsortvec and vv_qsortveci cruft
+	  - original motivation (bug in PDL-2.4.3) is long since fixed
+	  - vv_* methods are now just deprecated glob-aliases for the corresponding builtin PDL core functions
+
 v1.0.11 Thu, 16 Sep 2021 20:42:46 +0200 moocow
 	* replaced crufty $COMP(__X_size) with $SIZE(X) in Utils/utils.pd
 	  - at suggestion of Ed J, for upcoming PDL release
