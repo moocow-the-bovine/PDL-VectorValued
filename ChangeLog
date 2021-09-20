@@ -2,6 +2,9 @@
 ##
 ## Change log for perl distribution PDL::VectorValued
 
+v1.0.13 Mon, 20 Sep 2021 17:30:18 +0200 moocow
+	* cleaned up stale acknowledgements in docs
+
 v1.0.12 Sun, 19 Sep 2021 21:24:50 +0200 moocow
 	* removed stale vv_qsortvec and vv_qsortveci cruft
 	  - original motivation (bug in PDL-2.4.3) is long since fixed
