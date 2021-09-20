@@ -36,11 +36,6 @@ ACKNOWLEDGEMENTS
     *   Code for rlevec() and rldvec() derived from the PDL builtin
         functions rle() and rld() in $PDL_SRC_ROOT/Basic/Slices/slices.pd
 
-    *   Code for vv_qsortvec() copied nearly verbatim from the builtin PDL
-        functions in $PDL_SRC_ROOT/Basic/Ufunc/ufunc.pd, with Chris
-        Marshall's "uniqsortvec" patch. Code for vv_qsortveci() based on the
-        same.
-
 AUTHOR
     Bryan Jurish <moocow@cpan.org>
 
