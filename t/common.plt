@@ -79,7 +79,7 @@ sub pdlok {
   isok($label,
        defined($got) && defined($want)
        && cmp_dims($got,$want)
-       && all(matchpdl($want,$got)));
+       && all(matchpdl($want,$got))) or diag "got=$got\nwant=$want";
 }
 
 # pdlok_nodims($label, $got, $want)
