@@ -1,5 +1,5 @@
 \#$
-\.svn
+^\.git
 \.gz$
 ^Utils/.*\.(?:c|pm|xs)$
 ~$
