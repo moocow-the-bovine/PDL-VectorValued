@@ -155,7 +155,7 @@ and a vector $b() of corresponding offsets,
 decode concatenation of subsequences to $c(),
 as for:
 
- $c = null;
+ $c = zeroes($a->type, 0);
  $c = $c->append($b($_)+sequence($a->type,$a($_))) foreach (0..($N-1));
 
 See also: PDL::Slices::rld.
