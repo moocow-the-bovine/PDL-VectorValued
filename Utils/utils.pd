@@ -482,16 +482,17 @@ vvpp_def
 (q(
  sub PDL::vv_union {
    my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::vv_union(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
-   my @adims = $a->dims;
+   my ($MA,$NA,@adims) = $a->dims;
+   my ($MB,$NB,@bdims) = $b->dims;
+   barf("PDL::VectorValued::vv_union(): dimension mismatch") if ($MA != $MB);
    if (!defined($c)) {
      my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $adims[$#adims] + $b->dim(-1));
+     $c = PDL->zeroes($ctype, $MA, ($NA+$NB), @adims);
    }
-   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
+   $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
    &PDL::_vv_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+   return $c->mv(1,0)->slice("0:".($nc->max-1))->mv(0,1);
  }
 )),
    Code =>
@@ -549,18 +550,20 @@ vvpp_def
 (q(
  sub PDL::vv_intersect {
    my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::vv_intersect(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
-   my @adims = $a->dims;
-   my $NA = $adims[$#adims];
-   my $NB = $b->dim(-1);
+   my ($MA,$NA,@adims) = $a->dims;
+   my ($MB,$NB,@bdims) = $b->dims;
+   barf("PDL::VectorValued::vv_intersect(): dimension mismatch") if ($MA != $MB);
    if (!defined($c)) {
      my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $NA < $NB ? $NA : $NB);
+     $c = PDL->zeroes($ctype, $MA, ($NA < $NB ? $NA : $NB), @adims);
    }
-   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
+   $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
    &PDL::_vv_intersect_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+   my $nc_max = $nc->max;
+   return ($nc_max > 0
+	   ? $c->mv(1,0)->slice("0:".($nc_max-1))->mv(0,1)
+	   : $c->reshape($c->dim(0), 0, ($c->dims)[2..($c->ndims-1)]));
  }
 )),
    Code =>
@@ -610,19 +613,21 @@ vvpp_def
    PMCode=>
 (q(
  sub PDL::vv_setdiff {
-   my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::vv_setdiff(): dimension mismatch") if ($a->dim(-2) != $b->dim(-2));
-   my @adims = $a->dims;
-   my $NA = $adims[$#adims];
-   my $NB = $b->dim(-1);
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, @adims[0..($#adims-1)], $NA);
-   }
-   $nc = PDL->zeroes(PDL::long(), (@adims > 2 ? @adims[0..($#adims-2)] : 1)) if (!defined($nc));
-   &PDL::_vv_setdiff_int($a,$b,$c,$nc);
-   return ($c,$nc) if (wantarray);
-   return $c->mv(-1,0)->slice("0:".($nc->sclr-1))->mv(0,-1);
+  my ($a,$b,$c,$nc) = @_;
+  my ($MA,$NA,@adims) = $a->dims;
+  my ($MB,$NB,@bdims) = $b->dims;
+  barf("PDL::VectorValued::vv_setdiff(): dimension mismatch") if ($MA != $MB);
+  if (!defined($c)) {
+    my $ctype = $a->type > $b->type ? $a->type : $b->type;
+    $c = PDL->zeroes($ctype, $MA, $NA, @adims);
+  }
+  $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+  &PDL::_vv_setdiff_int($a,$b,$c,$nc);
+  return ($c,$nc) if (wantarray);
+  my $nc_max = $nc->max;
+  return ($nc_max > 0
+	  ? $c->mv(1,0)->slice("0:".($nc_max-1))->mv(0,1)
+	  : $c->reshape($c->dim(0), 0, ($c->dims)[2..($c->ndims-1)]));
  }
 )),
    Code =>
@@ -694,15 +699,16 @@ vvpp_def
 (q(
  sub PDL::v_union {
    my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::v_union(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
-   $nc = PDL->pdl(PDL::long(), $a->dim(0) + $b->dim(0)) if (!defined($nc));
+   my ($NA,@adims) = $a->dims;
+   my ($NB,@bdims) = $b->dims;
    if (!defined($c)) {
      my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, ref($nc) ? $nc->sclr : $nc);
+     $c = PDL->zeroes($ctype, ($NA+$NB), @adims);
    }
+   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
    &PDL::_v_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->reshape($nc->sclr);
+   return $c->slice("0:".($nc->max-1));
  }
 )),
    Code =>
@@ -757,17 +763,19 @@ vvpp_def
 (q(
  sub PDL::v_intersect {
    my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::v_intersect(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
-   my $NA = $a->dim(0);
-   my $NB = $b->dim(0);
-   $nc = PDL->pdl(PDL::long(), $NA < $NB ? $NA : $NB) if (!defined($nc));
+   my ($NA,@adims) = $a->dims;
+   my ($NB,@bdims) = $b->dims;
    if (!defined($c)) {
      my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, ref($nc) ? $nc->sclr : $nc);
+     $c = PDL->zeroes($ctype, ($NA < $NB ? $NA : $NB), @adims);
    }
+   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
    &PDL::_v_intersect_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->reshape($nc->sclr);
+   my $nc_max = $nc->max;
+   return ($nc_max > 0
+	   ? $c->slice("0:".($nc_max-1))
+	   : $c->reshape(0, ($c->dims)[1..($c->ndims-1)]));
  }
 )),
    Code =>
@@ -816,17 +824,19 @@ vvpp_def
 (q(
  sub PDL::v_setdiff {
    my ($a,$b,$c,$nc) = @_;
-   barf("PDL::VectorValued::v_setdiff(): only 1d vectors are supported") if ($a->ndims > 1 || $b->ndims > 1);
-   my $NA = $a->dim(0);
-   my $NB = $b->dim(0);
-   $nc    = PDL->pdl(PDL::long(), $NA) if (!defined($nc));
+   my ($NA,@adims) = $a->dims;
+   my ($NB,@bdims) = $b->dims;
    if (!defined($c)) {
      my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, $NA);
+     $c = PDL->zeroes($ctype, $NA, @adims);
    }
+   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
    &PDL::_v_setdiff_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->reshape($nc->sclr);
+   my $nc_max = $nc->max;
+   return ($nc_max > 0
+	   ? $c->slice("0:".($nc_max-1))
+	   : $c->reshape(0, ($c->dims)[1..($c->ndims-1)]));
  }
 )),
    Code =>

@@ -108,7 +108,7 @@ sub test_rlevec {
   our $ps2        = rldvec($puf,$pur);
   isok("rlevec+rldvec", all($ps==$ps2));
 }
-test_rlevec;
+#test_rlevec;
 
 ##---------------------------------------------------------------------
 ## test: rlend, rldnd: perl wrappers for clump() + rlevec(), rldvec()
@@ -136,7 +136,199 @@ sub test_rle_nd {
   $ps2        = rldND($puf,$pur);
   isok("rleND+rldND/nd", all($ps==$ps2));
 }
-test_rle_nd();
+#test_rle_nd();
+
+##---------------------------------------------------------------------
+## github issue #1
+## + https://github.com/moocow-the-bovine/PDL-VectorValued/issues/4
+#  + see https://stackoverflow.com/questions/54905561/perl-pdl-search-if-a-vector-is-in-an-array-or-in-a-matrix/71446817#71446817
+
+sub vv_in {
+  require PDL::VectorValued::Utils;
+  my ($needle, $haystack) = @_;
+  die "needle must have 1 dim less than haystack"
+    if $needle->ndims != $haystack->ndims - 1;
+  my $ign = $needle->dummy(1)->zeroes;
+  PDL::_vv_intersect_int($needle->dummy(1), $haystack, $ign, my $nc=PDL->null);
+  return $nc;
+}
+
+sub test_intersect_dimcheck0() {
+  my $titi = pdl(1,2,3);
+  my $toto = pdl([1,2,3], [4,5,6]);
+  my $notin = pdl(7,8,9);
+
+  my $want_1 = vv_in($titi, $toto);
+  my $want_0 = vv_in($notin, $toto);
+}
+#test_intersect_dimcheck0();
+
+sub test_intersect_dimcheck1 {
+  $, = ' ';
+  my $needle = sequence(3)+1;
+  my $haystack = sequence(3,4)+1;
+  print scalar($needle->slice(",*1")->vv_intersect($haystack)), "\n";
+
+  my $noneedle = -$needle;
+  print scalar($noneedle->slice(",*1")->vv_intersect($haystack)), "\n";
+
+  my $needles = $haystack->dice_axis(1,[0,3]);
+  print scalar($needles->vv_intersect($haystack)), "\n";
+
+  my $noneedles = -$needles;
+  print scalar($noneedles->vv_intersect($haystack)), "\n";
+
+  my $nontriv = $needle->cat($noneedle);
+  print scalar($nontriv->vv_intersect($haystack)), "\n";
+
+  my $k = 2;
+  my $needlek = $needle->slice(",*1,*$k");
+  print scalar($needlek->vv_intersect($haystack)), "\n";
+
+  my $needlesk = $needles->slice(",,*$k");
+  print scalar($needlesk->vv_intersect($haystack)), "\n";
+
+  my $nontrivk = $needles->glue(2,$nontriv);
+  print scalar($nontrivk->vv_intersect($haystack)), "\n";
+
+}
+test_intersect_dimcheck1();
+
+
+##----------------------------------------------
+## dimcheck: vv_setdiff
+
+sub test_vvdiff_dimcheck {
+  $, = ' ';
+  my $needle = sequence(3)+1;
+  my $haystack = sequence(3,4)+1;
+  print scalar($haystack->vv_setdiff($needle->slice(",*1"))), "\n";
+
+  my $noneedle = -$needle;
+  print scalar($haystack->vv_setdiff($noneedle->slice(",*1"))), "\n";
+
+  my $needles = $haystack->dice_axis(1,[0,3]);
+  print scalar($haystack->vv_setdiff($needles)), "\n";
+
+  my $noneedles = -$needles;
+  print scalar($haystack->vv_setdiff($noneedles)), "\n";
+
+  my $nontriv = $needle->cat($noneedle);
+  print scalar($haystack->vv_setdiff($nontriv)), "\n";
+
+  my $k = 2;
+  my $kneedle = $needle->slice(",*1,*$k");
+  my $khaystack = $haystack->slice(",,*$k");
+  print scalar($khaystack->vv_setdiff($kneedle)), "\n";
+
+  my $kneedles = $needles->slice(",,*$k");
+  print scalar($khaystack->slice->vv_setdiff($kneedles)), "\n";
+
+  my $knontriv = $needles->glue(2,$nontriv);
+  print scalar($khaystack->vv_setdiff($knontriv)), "\n";
+}
+test_vvdiff_dimcheck();
+
+
+##----------------------------------------------
+## dimcheck: vv_union
+
+sub test_union_dimcheck {
+  $, = ' ';
+  my $wx   = sequence(3,2)+1;
+  my $wxyz = sequence(3,4)+1;
+  print scalar($wx->vv_union($wxyz)), "\n";
+
+  my $tu = -$wx;
+  print scalar($tu->vv_union($wxyz)), "\n";
+
+  my $tuwx = $tu->glue(1,$wx);
+  print scalar($tuwx->vv_union($wxyz)), "\n";
+
+  my $empty = zeroes(3,0);
+  print scalar($empty->vv_union($wxyz)), "\n";
+  print scalar($wxyz->vv_union($empty)), "\n";
+  print scalar($empty->vv_union($empty)), "\n";
+
+  my $k = 2;
+  my $wx_k = $wx->slice(",,*$k");
+  print scalar($wx_k->vv_union($wxyz)), "\n";
+
+  my $tu_k = $tu->slice(",,*$k");
+  print scalar($tu_k->vv_union($wxyz)), "\n";
+
+  my $tuwx_k = $tuwx->slice(",,*$k");
+  print scalar($tuwx_k->vv_union($wxyz)), "\n";
+}
+test_union_dimcheck();
+
+
+##----------------------------------------------
+## dimcheck: v_union
+
+sub test_vsetops_dimcheck {
+  $, = ' ';
+
+  # data: base
+  my $empty = zeroes(0);
+  my $v1_2 = pdl([1,2]);
+  my $v3_4 = pdl([3,4]);
+  my $v1_4 = $v1_2->cat($v3_4)->flat;
+
+  # data: threaded
+  my $k = 2;
+  my $kempty = $empty->slice(",*$k");
+  my $kv1_2 = $v1_2->slice(",*$k");
+  my $kv3_4 = $v3_4->slice(",*$k");
+  my $kv1_4 = $v1_4->slice(",*$k");
+
+  if (1) {
+    # v_union
+    print scalar($v1_2->v_union($v3_4)), "\n";
+    print scalar($v1_2->v_union($v1_4)), "\n";
+    print scalar($v3_4->v_union($v1_4)), "\n";
+    print scalar($empty->v_union($v1_4)), "\n";
+    print scalar($empty->v_union($empty)), "\n";
+
+    print scalar($kv1_2->v_union($v3_4)), "\n";
+    print scalar($kv1_2->v_union($v1_4)), "\n";
+    print scalar($kv3_4->v_union($v1_4)), "\n";
+    print scalar($kempty->v_union($v1_4)), "\n";
+    print scalar($kempty->v_union($empty)), "\n";
+  }
+
+  if (1) {
+    # v_intersect
+    print scalar($v1_2->v_intersect($v3_4)), "\n";
+    print scalar($v1_2->v_intersect($v1_4)), "\n";
+    print scalar($v3_4->v_intersect($v1_4)), "\n";
+    print scalar($empty->v_intersect($v1_4)), "\n";
+    print scalar($empty->v_intersect($empty)), "\n";
+
+    print scalar($kv1_2->v_intersect($v3_4)), "\n";
+    print scalar($kv1_2->v_intersect($v1_4)), "\n";
+    print scalar($kv3_4->v_intersect($v1_4)), "\n";
+    print scalar($kempty->v_intersect($v1_4)), "\n";
+    print scalar($kempty->v_intersect($empty)), "\n";
+  }
+
+  if (1) {
+    # v_setdiff
+    print scalar($v1_2->v_setdiff($v3_4)), "\n";
+    print scalar($v1_2->v_setdiff($v1_4)), "\n";
+    print scalar($v3_4->v_setdiff($v1_4)), "\n";
+    print scalar($empty->v_setdiff($v1_4)), "\n";
+    print scalar($empty->v_setdiff($empty)), "\n";
+
+    print scalar($kv1_2->v_setdiff($v3_4)), "\n";
+    print scalar($kv1_2->v_setdiff($v1_4)), "\n";
+    print scalar($kv3_4->v_setdiff($v1_4)), "\n";
+    print scalar($kempty->v_setdiff($v1_4)), "\n";
+    print scalar($kempty->v_setdiff($empty)), "\n";
+  }
+}
+test_vsetops_dimcheck;
+
 
 
 ##---------------------------------------------------------------------
