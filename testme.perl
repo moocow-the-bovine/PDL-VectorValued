@@ -12,9 +12,14 @@ BEGIN {
 ##---------------------------------------------------------------------
 ## utils: as for common.plt
 
-sub isok {
-  my ($lab,$test) = @_;
-  print "$lab: ", ($test ? "ok" : "NOT ok"), "\n";
+BEGIN {
+  use Test::More;
+  use File::Basename;
+  use Cwd;
+  our ($TEST_DIR);
+  $TEST_DIR = Cwd::abs_path dirname( __FILE__ ).'/t';
+  eval qq{use lib ("$TEST_DIR/$_/blib/lib","$TEST_DIR/$_/blib/arch");} foreach (qw(..));
+  do "$TEST_DIR/common.plt" or die("$0: failed to load $TEST_DIR/common.plt: $@");
 }
 
 ##---------------------------------------------------------------------
@@ -153,15 +158,65 @@ sub vv_in {
   return $nc;
 }
 
-sub test_intersect_dimcheck0() {
-  my $titi = pdl(1,2,3);
+sub test_intersect_mowhawk() {
+  *vv_intersect = \&PDL::vv_intersect;
   my $toto = pdl([1,2,3], [4,5,6]);
+  my $titi = pdl(1,2,3);
   my $notin = pdl(7,8,9);
+  my $titi1 = $titi->dummy(1);
+  my $notin1 = $notin->dummy(1);
 
-  my $want_1 = vv_in($titi, $toto);
-  my $want_0 = vv_in($notin, $toto);
+  pdlok("titi&toto", $c=vv_intersect($titi, $toto), pdl([[1,2,3]]));
+  #Empty[3x0] [0] # wrong - the built-in broadcasting engine would insert a dim of 1, you need to mimic that
+
+  pdlok('notin&toto', $c=vv_intersect($notin, $toto), zeroes(3,0));
+  # Empty[3x0] [0] # right
+
+  pdlok("titi1&toto", $c=vv_intersect($titi->dummy(1), $toto), pdl([[1,2,3]]));
+  # right
+
+  pdlok("notin1&toto", $c=vv_intersect($notin->dummy(1), $toto), zeroes(3,0));
+  # [[0 0 0]] # this should be empty
+
+  print "what now?\n";
 }
-#test_intersect_dimcheck0();
+test_intersect_mowhawk();
+
+##----------------------------------------------
+## dimcheck: vv_union
+
+sub test_union_dimcheck {
+  $, = ' ';
+  my $wx   = sequence(3,2)+1;
+  my $wxyz = sequence(3,4)+1;
+  print scalar($wx->vv_union($wxyz)), "\n";
+
+  my $tu = -$wx;
+  print scalar($tu->vv_union($wxyz)), "\n";
+
+  my $tuwx = $tu->glue(1,$wx);
+  print scalar($tuwx->vv_union($wxyz)), "\n";
+
+  my $empty = zeroes(3,0);
+  print scalar($empty->vv_union($wxyz)), "\n";
+  print scalar($wxyz->vv_union($empty)), "\n";
+  print scalar($empty->vv_union($empty)), "\n";
+
+  my $k = 2;
+  my $wx_k = $wx->slice(",,*$k");
+  print scalar($wx_k->vv_union($wxyz)), "\n";
+
+  my $tu_k = $tu->slice(",,*$k");
+  print scalar($tu_k->vv_union($wxyz)), "\n";
+
+  my $tuwx_k = $tuwx->slice(",,*$k");
+  print scalar($tuwx_k->vv_union($wxyz)), "\n";
+}
+test_union_dimcheck();
+
+
+##----------------------------------------------
+## dimcheck: vv_intersect
 
 sub test_intersect_dimcheck1 {
   $, = ' ';
@@ -229,38 +284,6 @@ sub test_vvdiff_dimcheck {
 }
 test_vvdiff_dimcheck();
 
-
-##----------------------------------------------
-## dimcheck: vv_union
-
-sub test_union_dimcheck {
-  $, = ' ';
-  my $wx   = sequence(3,2)+1;
-  my $wxyz = sequence(3,4)+1;
-  print scalar($wx->vv_union($wxyz)), "\n";
-
-  my $tu = -$wx;
-  print scalar($tu->vv_union($wxyz)), "\n";
-
-  my $tuwx = $tu->glue(1,$wx);
-  print scalar($tuwx->vv_union($wxyz)), "\n";
-
-  my $empty = zeroes(3,0);
-  print scalar($empty->vv_union($wxyz)), "\n";
-  print scalar($wxyz->vv_union($empty)), "\n";
-  print scalar($empty->vv_union($empty)), "\n";
-
-  my $k = 2;
-  my $wx_k = $wx->slice(",,*$k");
-  print scalar($wx_k->vv_union($wxyz)), "\n";
-
-  my $tu_k = $tu->slice(",,*$k");
-  print scalar($tu_k->vv_union($wxyz)), "\n";
-
-  my $tuwx_k = $tuwx->slice(",,*$k");
-  print scalar($tuwx_k->vv_union($wxyz)), "\n";
-}
-test_union_dimcheck();
 
 
 ##----------------------------------------------

@@ -478,18 +478,21 @@ EOPM
 vvpp_def
   ('vv_union',
    Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA) + $SIZE(NB);',  # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  pdl * dpdlb = $PDL(b);
+  PDL_Indx na = dpdla->ndims > 1 ? dpdla->dims[1] : 1;
+  PDL_Indx nb = dpdlb->ndims > 1 ? dpdlb->dims[1] : 1;
+  $SIZE(NC) = na + nb;
+)),
    PMCode=>
 (q(
  sub PDL::vv_union {
    my ($a,$b,$c,$nc) = @_;
-   my ($MA,$NA,@adims) = $a->dims;
-   my ($MB,$NB,@bdims) = $b->dims;
-   barf("PDL::VectorValued::vv_union(): dimension mismatch") if ($MA != $MB);
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, $MA, ($NA+$NB), @adims);
-   }
-   $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+   $c = PDL->null if (!defined($nc));
+   $nc = PDL->null if (!defined($nc));
    &PDL::_vv_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
    return $c->mv(1,0)->slice("0:".($nc->max-1))->mv(0,1);
@@ -526,6 +529,10 @@ vvpp_def
    }
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  loop(M) %{ $c(NC=>nci) = 0; %}
+ }
 )),
    Doc=><<'EOD'
 
@@ -546,18 +553,21 @@ EOD
 vvpp_def
   ('vv_intersect',
    Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA) < $SIZE(NB) ? $SIZE(NA) : $SIZE(NB);', # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  pdl * dpdlb = $PDL(b);
+  PDL_Indx na = dpdla->ndims > 1 ? dpdla->dims[1] : 1;
+  PDL_Indx nb = dpdlb->ndims > 1 ? dpdlb->dims[1] : 1;
+  $SIZE(NC) = na < nb ? na : nb;
+)),
    PMCode=>
 (q(
  sub PDL::vv_intersect {
    my ($a,$b,$c,$nc) = @_;
-   my ($MA,$NA,@adims) = $a->dims;
-   my ($MB,$NB,@bdims) = $b->dims;
-   barf("PDL::VectorValued::vv_intersect(): dimension mismatch") if ($MA != $MB);
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, $MA, ($NA < $NB ? $NA : $NB), @adims);
-   }
-   $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+   $c = PDL->null if (!defined($c));
+   $nc = PDL->null if (!defined($nc));
    &PDL::_vv_intersect_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
    my $nc_max = $nc->max;
@@ -591,6 +601,10 @@ vvpp_def
    }
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  loop(M) %{ $c(NC=>nci) = 0; %}
+ }
 )),
    Doc=><<'EOD'
 
@@ -610,18 +624,18 @@ EOD
 vvpp_def
   ('vv_setdiff',
    Pars => 'a(M,NA); b(M,NB); [o]c(M,NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA);',  # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  $SIZE(NC) = dpdla->ndims > 1 ? dpdla->dims[1] : 1;
+)),
    PMCode=>
 (q(
  sub PDL::vv_setdiff {
   my ($a,$b,$c,$nc) = @_;
-  my ($MA,$NA,@adims) = $a->dims;
-  my ($MB,$NB,@bdims) = $b->dims;
-  barf("PDL::VectorValued::vv_setdiff(): dimension mismatch") if ($MA != $MB);
-  if (!defined($c)) {
-    my $ctype = $a->type > $b->type ? $a->type : $b->type;
-    $c = PDL->zeroes($ctype, $MA, $NA, @adims);
-  }
-  $nc = PDL->zeroes(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+  $c = PDL->null if (!defined($c));
+  $nc = PDL->null if (!defined($nc));
   &PDL::_vv_setdiff_int($a,$b,$c,$nc);
   return ($c,$nc) if (wantarray);
   my $nc_max = $nc->max;
@@ -658,6 +672,10 @@ vvpp_def
    loop (M) %{ $c(NC=>nci) = $a(NA=>nai); %}
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  loop (M) %{ $c(NC=>nci) = 0; %}
+ }
 )),
    Doc=><<'EOD'
 
@@ -695,17 +713,20 @@ EOPM
 vvpp_def
   ('v_union',
    Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA) + $SIZE(NB);', # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  pdl * dpdlb = $PDL(b);
+  $SIZE(NC) = (dpdla->ndims > 0 ? dpdla->dims[0] : 1) +
+              (dpdlb->ndims > 0 ? dpdlb->dims[0] : 1);
+)),
    PMCode=>
 (q(
  sub PDL::v_union {
    my ($a,$b,$c,$nc) = @_;
-   my ($NA,@adims) = $a->dims;
-   my ($NB,@bdims) = $b->dims;
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, ($NA+$NB), @adims);
-   }
-   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+   $c = PDL->null if (!defined($c));
+   $nc = PDL->null if (!defined($nc));
    &PDL::_v_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
    return $c->slice("0:".($nc->max-1));
@@ -741,6 +762,10 @@ vvpp_def
    }
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  $c(NC=>nci) = 0;
+ }
 )),
    Doc=><<'EOD'
 
@@ -759,17 +784,21 @@ EOD
 vvpp_def
   ('v_intersect',
    Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA) < $SIZE(NB) ? $SIZE(NA) : $SIZE(NB);', # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  pdl * dpdlb = $PDL(b);
+  PDL_Indx na = dpdla->ndims > 0 ? dpdla->dims[0] : 1;
+  PDL_Indx nb = dpdlb->ndims > 0 ? dpdlb->dims[0] : 1;
+  $SIZE(NC) = na < nb ? na : nb;
+)),
    PMCode=>
 (q(
  sub PDL::v_intersect {
    my ($a,$b,$c,$nc) = @_;
-   my ($NA,@adims) = $a->dims;
-   my ($NB,@bdims) = $b->dims;
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, ($NA < $NB ? $NA : $NB), @adims);
-   }
-   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+   $c = PDL->null if (!defined($c));
+   $nc = PDL->null if (!defined($nc));
    &PDL::_v_intersect_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
    my $nc_max = $nc->max;
@@ -802,6 +831,10 @@ vvpp_def
    }
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  $c(NC=>nci) = 0;
+ }
 )),
    Doc=><<'EOD'
 
@@ -820,17 +853,18 @@ EOD
 vvpp_def
   ('v_setdiff',
    Pars => 'a(NA); b(NB); [o]c(NC); int [o]nc()',
+   #RedoDimsCode => '$SIZE(NC) = $SIZE(NA);', # PDL >= v2.075
+   RedoDimsCode =>
+(q(
+  pdl * dpdla = $PDL(a);
+  $SIZE(NC) = dpdla->ndims > 0 ? dpdla->dims[0] : 1;
+)),
    PMCode=>
 (q(
  sub PDL::v_setdiff {
    my ($a,$b,$c,$nc) = @_;
-   my ($NA,@adims) = $a->dims;
-   my ($NB,@bdims) = $b->dims;
-   if (!defined($c)) {
-     my $ctype = $a->type > $b->type ? $a->type : $b->type;
-     $c = PDL->zeroes($ctype, $NA, @adims);
-   }
-   $nc = PDL->pdl(PDL::long(), @adims ? @adims : 1) if (!defined($nc));
+   $c = PDL->null if (!defined($c));
+   $nc = PDL->null if (!defined($nc));
    &PDL::_v_setdiff_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
    my $nc_max = $nc->max;
@@ -866,6 +900,10 @@ vvpp_def
    $c(NC=>nci) = $a(NA=>nai);
  }
  $nc() = nci;
+ for ( ; nci < sizeNC; nci++) {
+  //-- zero unpopulated outputs
+  $c(NC=>nci) = 0;
+ }
 )),
    Doc=><<'EOD'
 

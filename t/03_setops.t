@@ -111,7 +111,7 @@ sub test_vv_thread_dimensions {
   # vv_intersect: threading/broadcasting
   my $kneedle0 = $needle0->slice(",,*$k");
   my $kneedle1 = $needle1->slice(",,*$k");
-  my $kneedles = $needle0->slice(",,*1")->glue(2, $needle1->slice(",,*1"));
+  my $kneedles = pdl([[[-3,-2,-1]],[[1,2,3]]]);
   my $khaystack = $haystack->slice(",,*$k");
   pdlok("vv_intersect - thread dims - needle0(*k)&haystack", scalar($kneedle0->vv_intersect($haystack)), $kempty);
   pdlok("vv_intersect - thread dims - needle1(*k)&haystack", scalar($kneedle1->vv_intersect($haystack)), $kneedle1);
@@ -141,6 +141,83 @@ sub test_vv_thread_dimensions {
   pdlok("vv_setdiff - thread dims - empty(*k)-haystack", scalar($kempty->vv_setdiff($haystack)), $kempty);
 }
 test_vv_thread_dimensions();
+
+##--------------------------------------------------------------
+## vv_intersect tests as suggested by ETJ/mowhawk2
+##  + see https://github.com/moocow-the-bovine/PDL-VectorValued/issues/4
+
+sub test_vv_intersect_implicit_dims {
+  # vv_intersection: from ETJ/mowhawk2 a la https://stackoverflow.com/a/71446817/3857002
+  my $toto = pdl([1,2,3], [4,5,6]);
+  my $titi = pdl(1,2,3);
+  my $notin = pdl(7,8,9);
+  my ($c);
+
+  pdlok('vv_intersect - implicit dims - titi&toto', $c=vv_intersect($titi,$toto), [[1,2,3]]);
+  pdlok('vv_intersect - implicit dims - notin&toto', $c=vv_intersect($notin,$toto), zeroes(3,0));
+  pdlok('vv_intersect - implicit dims - titi(*1)&toto', $c=vv_intersect($titi->dummy(1), $toto), [[1,2,3]]);
+  pdlok('vv_intersect - implicit dims - notin(*1)&toto', $c=vv_intersect($notin->dummy(1), $toto), zeroes(3,0));
+
+  my $needle0_in = pdl([1,2,3]); # 3
+  my $needle0_notin = pdl([9,9,9]); # 3
+  my $needle_in = $needle0_in->dummy(1);  # 3x1: [[1 2 3]]
+  my $needle_notin = $needle0_notin->dummy(1); # 3x1: [[-3 -2 -1]]
+  my $needles = pdl([[1,2,3],[9,9,9]]); # 3x2: $needle0_in->cat($needle0_notin)
+  my $haystack = pdl([[1,2,3],[4,5,6]]); # 3x2
+
+  sub intersect_ok {
+    my ($label, $a,$b, $c_want,$nc_want,$c_sclr_want) = @_;
+    my ($c, $nc) = vv_intersect($a,$b);
+    my $c_sclr = vv_intersect($a,$b);
+    pdlok("$label - result", $c, $c_want) if (defined($c_want));
+    pdlok("$label - counts", $nc, $nc_want) if (defined($nc_want));
+    pdlok("$label - scalar", $c_sclr, $c_sclr_want) if (defined($c_sclr_want));
+  }
+
+  intersect_ok('vv_intersect - implicit dims - needle0_in&haystack',
+	       $needle0_in, $haystack,
+	       [[1,2,3]], 1, [[1,2,3]]
+	      );
+  intersect_ok('vv_intersect - implicit dims - needle_in&haystack',
+	       $needle_in, $haystack,
+	       [[1,2,3]], 1, [[1,2,3]]
+	      );
+
+  intersect_ok('vv_intersect - implicit dims - needle0_notin&haystack',
+	       $needle0_notin, $haystack,
+	       [[0,0,0]], 0, zeroes(3,0)
+	      );
+  intersect_ok('vv_intersect - implicit dims - needle_notin&haystack',
+	       $needle_notin, $haystack,
+	       [[0,0,0]], 0, zeroes(3,0)
+	      );
+
+  intersect_ok('vv_intersect - implicit dims - needles&haystack',
+	       $needles, $haystack,
+	       [[1,2,3],[0,0,0]], 1, [[1,2,3]]
+	      );
+
+  # now we want to know whether each needle is "in" one by one, not really
+  # a normal intersect, so we insert a dummy in haystack in order to broadcast
+  # the "nc" needs to come back as a 4x2
+  my $needles8 = pdl([[1,2,3],[9,9,9]])->slice(",*4,"); # 3x4x2
+
+  # need to manipulate above into suitable inputs for intersect to get right output
+  my $needles8x = $needles8->slice(",*1,,"); # 3x*x4x2 # dummy of size 1 inserted in dim 1
+
+  # haystack: no changes needed; don't need same number of dims, broadcast engine will add dummy/1s at top
+  my $haystack8 = $haystack;
+  my $c_want8 = [
+		 [[[1,2,3]],[[1,2,3]],[[1,2,3]],[[1,2,3]]],
+		 [[[0,0,0]],[[0,0,0]],[[0,0,0]],[[0,0,0]]],
+		];
+
+  intersect_ok('vv_intersect - implicit dims - needles8x&haystack8',
+	       $needles8x, $haystack8,
+	       $c_want8, [[1,1,1,1],[0,0,0,0]], undef
+	      );
+}
+test_vv_intersect_implicit_dims();
 
 ##--------------------------------------------------------------
 ## v_*: dim-checks and implicit thread dimensions
