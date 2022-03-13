@@ -200,21 +200,25 @@ sub test_vv_intersect_implicit_dims {
   # now we want to know whether each needle is "in" one by one, not really
   # a normal intersect, so we insert a dummy in haystack in order to broadcast
   # the "nc" needs to come back as a 4x2
-  my $needles8 = pdl([[1,2,3],[9,9,9]])->slice(",*4,"); # 3x4x2
+  my $needles8 = pdl( [[[1,2,3],[4,5,6],[8,8,8],[8,8,8]],
+		       [[4,5,6],[9,9,9],[1,2,3],[9,9,9]]]); # 3x4x2
 
   # need to manipulate above into suitable inputs for intersect to get right output
+  # + dummy dim here also ensures singleton query-vector-sets are (trivially) sorted
   my $needles8x = $needles8->slice(",*1,,"); # 3x*x4x2 # dummy of size 1 inserted in dim 1
 
   # haystack: no changes needed; don't need same number of dims, broadcast engine will add dummy/1s at top
   my $haystack8 = $haystack;
   my $c_want8 = [
-		 [[[1,2,3]],[[1,2,3]],[[1,2,3]],[[1,2,3]]],
-		 [[[0,0,0]],[[0,0,0]],[[0,0,0]],[[0,0,0]]],
+		 [[[1,2,3]],[[4,5,6]],[[0,0,0]],[[0,0,0]]],
+		 [[[4,5,6]],[[0,0,0]],[[1,2,3]],[[0,0,0]]],
 		];
+  my $nc_want8 = [[1,1,0,0],
+		  [1,0,1,0]];
 
   intersect_ok('vv_intersect - implicit dims - needles8x&haystack8',
 	       $needles8x, $haystack8,
-	       $c_want8, [[1,1,1,1],[0,0,0,0]], undef
+	       $c_want8, $nc_want8, undef
 	      );
 }
 test_vv_intersect_implicit_dims();

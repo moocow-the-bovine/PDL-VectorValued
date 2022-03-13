@@ -178,6 +178,34 @@ sub test_intersect_mowhawk() {
   pdlok("notin1&toto", $c=vv_intersect($notin->dummy(1), $toto), zeroes(3,0));
   # [[0 0 0]] # this should be empty
 
+  ##----
+
+  # now we want to know whether each needle is "in" one by one, not really
+  # a normal intersect, so we insert a dummy in haystack in order to broadcast
+  # the "nc" needs to come back as a 4x2
+  #my $needles8 = pdl([[1,2,3],[9,9,9]])->slice(",*4,"); # 3x4x2 : fake
+  my $needles8 = pdl( [[[1,2,3],[4,5,6],[8,8,8],[8,8,8]],
+		       [[4,5,6],[9,9,9],[1,2,3],[9,9,9]]]); # 3x4x2
+
+  # need to manipulate above into suitable inputs for intersect to get right output
+  # + dummy dim here also ensures singleton query-vector-sets are (trivially) sorted
+  my $needles8x = $needles8->slice(",*1,,"); # 3x*x4x2 # dummy of size 1 inserted in dim 1
+
+  # haystack: no changes needed; don't need same number of dims, broadcast engine will add dummy/1s at top
+  my $haystack = pdl([[1,2,3],[4,5,6]]); # 3x2
+  my $haystack8 = $haystack;
+  my $c_want8 = [
+		 [[[1,2,3]],[[4,5,6]],[[0,0,0]],[[0,0,0]]],
+		 [[[4,5,6]],[[0,0,0]],[[1,2,3]],[[0,0,0]]],
+		];
+  my $nc_want8 = [[1,1,0,0],
+		  [1,0,1,0]];
+
+  my ($c, $nc) = vv_intersect($needles8x, $haystack8);
+  pdlok('needles8x&haystack - result', $c, $c_want8);
+  pdlok('needles8x&haystack - counts', $nc, $nc_want8);
+
+
   print "what now?\n";
 }
 test_intersect_mowhawk();
