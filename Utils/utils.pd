@@ -495,7 +495,7 @@ vvpp_def
    $nc = PDL->null if (!defined($nc));
    &PDL::_vv_union_int($a,$b,$c,$nc);
    return ($c,$nc) if (wantarray);
-   return $c->mv(1,0)->slice("0:".($nc->max-1))->mv(0,1);
+   return $c->slice(",0:".($nc->max-1));
  }
 )),
    Code =>
@@ -572,7 +572,7 @@ vvpp_def
    return ($c,$nc) if (wantarray);
    my $nc_max = $nc->max;
    return ($nc_max > 0
-	   ? $c->mv(1,0)->slice("0:".($nc_max-1))->mv(0,1)
+	   ? $c->slice(",0:".($nc_max-1))
 	   : $c->reshape($c->dim(0), 0, ($c->dims)[2..($c->ndims-1)]));
  }
 )),
@@ -640,7 +640,7 @@ vvpp_def
   return ($c,$nc) if (wantarray);
   my $nc_max = $nc->max;
   return ($nc_max > 0
-	  ? $c->mv(1,0)->slice("0:".($nc_max-1))->mv(0,1)
+	  ? $c->slice(",0:".($nc_max-1))
 	  : $c->reshape($c->dim(0), 0, ($c->dims)[2..($c->ndims-1)]));
  }
 )),

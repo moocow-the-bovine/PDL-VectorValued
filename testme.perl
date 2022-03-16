@@ -162,9 +162,11 @@ sub test_intersect_mowhawk() {
   *vv_intersect = \&PDL::vv_intersect;
   my $toto = pdl([1,2,3], [4,5,6]);
   my $titi = pdl(1,2,3);
+  my $tata = pdl(4,5,6);
   my $notin = pdl(7,8,9);
   my $titi1 = $titi->dummy(1);
   my $notin1 = $notin->dummy(1);
+  my $tino = $titi->cat($notin);
 
   pdlok("titi&toto", $c=vv_intersect($titi, $toto), pdl([[1,2,3]]));
   #Empty[3x0] [0] # wrong - the built-in broadcasting engine would insert a dim of 1, you need to mimic that
