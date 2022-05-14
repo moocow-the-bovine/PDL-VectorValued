@@ -140,13 +140,17 @@ New code should use C<FUNC()> or C<PDL::FUNC()>.
 
 =item *
 
-Backwards-compatible code can use C<FUNC()>, C<PDL::VectorValued::FUNC()>,
-or C<PDL::VectorValued::vv_FUNC()>.
+Backwards-compatible code can use C<FUNC()> or C<PDL::VectorValued::FUNC()>.
 
 =item *
 
-Direct use of C<PDL::VectorValued::Utils::FUNC()> and
-C<PDL::VectorValued::Utils::vv_FUNC()> is deprecated.
+Direct use of C<PDL::VectorValued::Utils::vv_FUNC()> is deprecated.
+
+=item *
+
+Direct use of C<PDL::VectorValued::Utils::FUNC()> is likely broken as of
+PDL::VectorValued v1.0.19.
+
 
 =back
 
