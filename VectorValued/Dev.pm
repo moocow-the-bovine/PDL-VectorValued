@@ -10,8 +10,6 @@
 
 package PDL::VectorValued::Dev;
 use PDL::Types;
-use PDL::Lite qw();  # for PDL::VERSION
-use version;
 use strict;
 
 ##======================================================================
@@ -76,7 +74,7 @@ vector-valued PDLs.  It produces code for processing with PDL::PP.
 ## undef = vvpp_def($name,%args)
 =pod
 
- ##======================================================================
+##======================================================================
 ## Package Variables
 =pod
 
