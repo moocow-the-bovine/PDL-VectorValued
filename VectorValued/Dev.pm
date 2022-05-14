@@ -10,6 +10,8 @@
 
 package PDL::VectorValued::Dev;
 use PDL::Types;
+use PDL::Lite qw();  # for PDL::VERSION
+use version;
 use strict;
 
 ##======================================================================
@@ -17,7 +19,7 @@ use strict;
 #use PDL::PP; ##-- do NOT do this!
 use Exporter;
 
-our $VERSION = '1.0.18'; ##-- v1.0.4: use perl-reversion from Perl::Version instead
+our $VERSION = '1.0.19'; ##-- v1.0.4: use perl-reversion from Perl::Version instead
 our @ISA = qw(Exporter);
 our @EXPORT_OK =
   (
@@ -68,6 +70,26 @@ PDL::VectorValued::Dev provides some developer utilities for
 vector-valued PDLs.  It produces code for processing with PDL::PP.
 
 =cut
+
+
+##--------------------------------------------------------------
+## undef = vvpp_def($name,%args)
+=pod
+
+ ##======================================================================
+## Package Variables
+=pod
+
+=head1 Package Variables
+
+=head2 $VV_PREFIX
+
+Prefix appended
+
+=cut
+
+our $VVPP_PREFIX = "vvpp_";
+our $VV_PREFIX = "vv_";
 
 ##======================================================================
 ## PP Utiltiies
