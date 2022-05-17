@@ -30,38 +30,39 @@ BEGIN {
      qw(vv_indx),
     );
 
-  # %VV_IMPORT: we expect these symbols to be defined by PDL core
-  my %VV_IMPORT =
-    (map {($_=>undef)}
-      (version->parse($PDL::VERSION) > version->parse('2.079')
-       ? qw(cmpvec eqvec vsearchvec)
-       : qw()));
+  # %VV_IMPORT: import these from PDL core if available (PDL > v2.079)
+  my %VV_IMPORT = (
+		   vv_rlevec => {vv=>'rlevec', p=>PDL->can('rlevec')},
+		   vv_rldvec => {vv=>'rldvec', p=>PDL->can('rldvec')},
+		   vv_rleseq => {vv=>'rleseq', p=>PDL->can('rleseq')},
+		   vv_rldseq => {vv=>'rldseq', p=>PDL->can('rldseq')},
+		   vv_enumvec => {vv=>'enumvec', p=>PDL->can('enumvec')},
+		   vv_enumvecg => {vv=>'enumvecg', p=>PDL->can('enumvecg')},
+		   vv_vsearchvec => {vv=>'vsearchvec', p=>PDL->can('vsearchvec')},
+		   vv_cmpvec => {vv=>'cmpvec', p=>PDL->can('cmpvec')},
+		   vv_union => {vv=>'vv_union', p=>PDL->can('unionvec')},
+		   vv_intersect => {vv=>'vv_intersect', p=>PDL->can('intersectvec')},
+		   vv_setdiff => {vv=>'vv_setdiff', p=>PDL->can('setdiffvec')},
+		   v_union => {vv=>'v_union', p=>PDL->can('sortedunion')},
+		   v_intersect => {vv=>'v_intersect', p=>PDL->can('sortedintersect')},
+		   v_setdiff => {vv=>'v_setdiff', p=>PDL->can('sortedsetdiff')},
+		   vv_rleND => {vv=>'rleND', p=>undef},
+		   vv_rldND => {vv=>'rldND', p=>undef},
+		   #vv_indx => {vv=>'vv_indx', p=>PDL->can('indx')}, # DEBUG
+		  );
 
-  # %VV_NOALIAS: keep vv_ prefix on these: don't ever alias FOO => vv_FOO
-  my %VV_NOALIAS =
-    (map {($_=>undef)}
-     qw(indx),
-     qw(uniqvec qsortvec qsortveci), # already imported
-     qw(union intersect setdiff),
-     qw(vcos),
-    );
 
   @EXPORT_OK = @VV_SYMBOLS;
-  foreach my $vv_sym (grep {/^vv_/} @VV_SYMBOLS) {
+  foreach my $vv_sym (@VV_SYMBOLS) {
     no strict 'refs';
-    my $sym = $vv_sym;
-    $sym =~ s/^vv_//;
 
-    if (exists $VV_NOALIAS{$sym}) {
-      # never bind $sym => $vv_sym
-      ;
+    if ($VV_IMPORT{$vv_sym} && defined($VV_IMPORT{$vv_sym}{p})) {
+      # function lives in PDL core: import it here, and clobber $vv_sym here (but not in VV::Utils)
+      *$vv_sym = *{$VV_IMPORT{$vv_sym}{vv}} = $VV_IMPORT{$vv_sym}{p};
     }
-    elsif (${PDL::}{$sym} && exists($VV_IMPORT{$sym})) {
-      # $sym lives in PDL core: import it here, and clobber $vv_sym here (but not in VV::Utils)
-      *$sym = *$vv_sym = ${PDL::}{$sym};
-    }
-    elsif (!${PDL::}{$sym}) {
+    elsif ($VV_IMPORT{$vv_sym}) {
       # $sym is defined here as "vv_$sym" : bind it here & in PDL namespace
+      my $sym = $VV_IMPORT{$vv_sym}{vv};
       ${PDL::}{$sym} = *$sym = *$vv_sym;
 
       # ... and make it exportable
@@ -121,16 +122,18 @@ all carry a C<vv_> prefix as of PDL::VectorValued v1.0.19
 Prior to v1.0.19, many of these functions (e.g. C<cmpvec()>)
 were defined by this module without a C<vv_> prefix.
 
-For PDL::VectorValued E<gt>= v1.0.19 and PDL E<gt> v2.079, some vector-valued
-functions (currently C<cmpvec>, C<eqvec>, and C<vsearchvec>)
-are expected to be defined in the PDL core.  For such "moving" functions
-C<FUNC> the PDL core implementations will be imported into the C<PDL::VectorValued>
+For PDL::VectorValued E<gt>= v1.0.19 and PDL E<gt> v2.079, most vector-valued
+functions are expected to be defined in the PDL core.  For such "moving" functions
+C<FUNC>, the PDL core implementations will be imported into the C<PDL::VectorValued>
 namespace as both C<FUNC> and C<vv_FUNC>, clobbering any local implementation
 from the C<PDL::VectorValued::Utils> namespace.  Local implementations
 C<vv_FUNC> which were previously defined and exported as C<FUNC>
 or for which no binding for C<*PDL::FUNC> exists will be bound to
 both C<*PDL::VectorValued::FUNC> and C<*PDL::FUNC>, and exported by default,
 for backwards-compatibility.
+
+Functions expected to move to the PDL core are:
+
 
 =over 4
 
