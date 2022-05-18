@@ -2,7 +2,7 @@
 ##
 ## Change log for perl distribution PDL::VectorValued
 
-v1.0.19 Sat, 14 May 2022 11:52:08 +0200 moocow
+v1.0.19 Wed, 18 May 2022 14:41:44 +0200 moocow
 	* add vv_ prefix to all VectorValued::Utils functions
 	* add conditional aliases in VectorValued.pm BEGIN block for github issue #5
 	  - import %VV_IMPORT symbols from PDL core if available
