@@ -43,9 +43,9 @@ BEGIN {
 		   vv_union => {vv=>'vv_union', p=>PDL->can('unionvec')},
 		   vv_intersect => {vv=>'vv_intersect', p=>PDL->can('intersectvec')},
 		   vv_setdiff => {vv=>'vv_setdiff', p=>PDL->can('setdiffvec')},
-		   v_union => {vv=>'v_union', p=>PDL->can('sortedunion')},
-		   v_intersect => {vv=>'v_intersect', p=>PDL->can('sortedintersect')},
-		   v_setdiff => {vv=>'v_setdiff', p=>PDL->can('sortedsetdiff')},
+		   v_union => {vv=>'v_union', p=>PDL->can('union_sorted')},
+		   v_intersect => {vv=>'v_intersect', p=>PDL->can('intersect_sorted')},
+		   v_setdiff => {vv=>'v_setdiff', p=>PDL->can('setdiff_sorted')},
 		   vv_rleND => {vv=>'rleND', p=>undef},
 		   vv_rldND => {vv=>'rldND', p=>undef},
 		   #vv_indx => {vv=>'vv_indx', p=>PDL->can('indx')}, # DEBUG
