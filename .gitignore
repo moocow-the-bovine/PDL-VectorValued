@@ -13,6 +13,7 @@ MYMETA.*
 pm_to_blib
 blib
 Makefile
+git.diff
 
 Utils/Utils.c
 Utils/Utils.pm

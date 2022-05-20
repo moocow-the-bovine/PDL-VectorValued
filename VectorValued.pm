@@ -46,8 +46,8 @@ BEGIN {
 		   v_union => {vv=>'v_union', p=>PDL->can('union_sorted')},
 		   v_intersect => {vv=>'v_intersect', p=>PDL->can('intersect_sorted')},
 		   v_setdiff => {vv=>'v_setdiff', p=>PDL->can('setdiff_sorted')},
-		   vv_rleND => {vv=>'rleND', p=>undef},
-		   vv_rldND => {vv=>'rldND', p=>undef},
+		   vv_rleND => {vv=>'rleND', p=>PDL->can('rleND')},
+		   vv_rldND => {vv=>'rldND', p=>PDL->can('rldND')},
 		   #vv_indx => {vv=>'vv_indx', p=>PDL->can('indx')}, # DEBUG
 		  );
 
@@ -77,7 +77,7 @@ our %EXPORT_TAGS =
   );
 
 ## VERSION was formerly set by PDL::VectorValued::Version, now use perl-reversion from Perl::Version instead
-our $VERSION = '1.0.19';
+our $VERSION = '1.0.20';
 
 ##======================================================================
 ## pod: header
