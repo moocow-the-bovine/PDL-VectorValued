@@ -1,3 +1,2 @@
-#svntags=$(svnroot.sh . | perl -pe 's{\btrunk.*$}{tags/PDL-VectorValued};')
+#svntags=$(svnroot.sh . | perl -pe 's{\btrunk.*$}{tags/PDL-CCS};')
 scm=git
-
