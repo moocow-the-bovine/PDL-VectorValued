@@ -1006,7 +1006,7 @@ of a dense PDL $a().  This is basically the same thing as:
 
  ($a * $b)->sumover / ($a->pow(2)->sumover->sqrt * $b->pow(2)->sumover->sqrt)
 
-... but should be must faster to compute, and avoids allocating potentially large temporaries for
+... but should be much faster to compute, and avoids allocating potentially large temporaries for
 the vector magnitudes.  Output values in $vcos() are cosine similarities in the range [-1,1],
 except for zero-magnitude vectors which will result in NaN values in $vcos().
 
