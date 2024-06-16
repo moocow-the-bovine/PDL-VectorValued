@@ -433,7 +433,7 @@ of a dense PDL $a().  This is basically the same thing as:
 the vector magnitudes.  Output values in $vcos() are cosine similarities in the range [-1,1],
 except for zero-magnitude vectors which will result in NaN values in $vcos().
 
-You can use PDL threading to batch-compute distances for multiple $b() vectors simultaneously:
+You can use PDL broadcasting to batch-compute distances for multiple $b() vectors simultaneously:
 
   $bx   = random($M, $NB);   ##-- get $NB random vectors of size $N
   $vcos = vv_vcos($a,$bx);   ##-- $vcos(i,j) ~ sim($a(,i),$b(,j))

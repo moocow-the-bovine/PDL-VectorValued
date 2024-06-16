@@ -328,7 +328,7 @@ sub test_vsetops_dimcheck {
   my $v3_4 = pdl([3,4]);
   my $v1_4 = $v1_2->cat($v3_4)->flat;
 
-  # data: threaded
+  # data: broadcasted
   my $k = 2;
   my $kempty = $empty->slice(",*$k");
   my $kv1_2 = $v1_2->slice(",*$k");
