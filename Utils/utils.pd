@@ -1012,7 +1012,7 @@ except for zero-magnitude vectors which will result in NaN values in $vcos().
 
 You can use PDL broadcasting to batch-compute distances for multiple $b() vectors simultaneously:
 
-  $bx   = random($M, $NB);   ##-- get $NB random vectors of size $N
+  $bx   = random($M, $NB);   ##-- get $NB random vectors of size $M
   $vcos = vv_vcos($a,$bx);   ##-- $vcos(i,j) ~ sim($a(,i),$b(,j))
 
 },
