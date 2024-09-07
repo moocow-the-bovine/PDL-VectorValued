@@ -34,38 +34,42 @@ BEGIN {
 
   # %VV_IMPORT: import these from PDL core if available (PDL > v2.079)
   my %VV_IMPORT = (
-		   vv_rlevec => {vv=>'rlevec', p=>PDL->can('rlevec')},
-		   vv_rldvec => {vv=>'rldvec', p=>PDL->can('rldvec')},
-		   vv_rleseq => {vv=>'rleseq', p=>PDL->can('rleseq')},
-		   vv_rldseq => {vv=>'rldseq', p=>PDL->can('rldseq')},
-		   vv_enumvec => {vv=>'enumvec', p=>PDL->can('enumvec')},
-		   vv_enumvecg => {vv=>'enumvecg', p=>PDL->can('enumvecg')},
-		   vv_vsearchvec => {vv=>'vsearchvec', p=>PDL->can('vsearchvec')},
-		   vv_cmpvec => {vv=>'cmpvec', p=>PDL->can('cmpvec')},
-		   vv_union => {vv=>'vv_union', p=>PDL->can('unionvec')},
-		   vv_intersect => {vv=>'vv_intersect', p=>PDL->can('intersectvec')},
-		   vv_setdiff => {vv=>'vv_setdiff', p=>PDL->can('setdiffvec')},
-		   v_union => {vv=>'v_union', p=>PDL->can('union_sorted')},
-		   v_intersect => {vv=>'v_intersect', p=>PDL->can('intersect_sorted')},
-		   v_setdiff => {vv=>'v_setdiff', p=>PDL->can('setdiff_sorted')},
-		   vv_rleND => {vv=>'rleND', p=>PDL->can('rleND')},
-		   vv_rldND => {vv=>'rldND', p=>PDL->can('rldND')},
-		   vv_vcos => {vv=>'vv_vcos', p=>PDL->can('vcos')},
-		   #vv_indx => {vv=>'vv_indx', p=>PDL->can('indx')}, # DEBUG
+		   vv_rlevec => {vv=>'rlevec', p=>'rlevec'},
+		   vv_rldvec => {vv=>'rldvec', p=>'rldvec'},
+		   vv_rleseq => {vv=>'rleseq', p=>'rleseq'},
+		   vv_rldseq => {vv=>'rldseq', p=>'rldseq'},
+		   vv_enumvec => {vv=>'enumvec', p=>'enumvec'},
+		   vv_enumvecg => {vv=>'enumvecg', p=>'enumvecg'},
+		   vv_vsearchvec => {vv=>'vsearchvec', p=>'vsearchvec'},
+		   vv_cmpvec => {vv=>'cmpvec', p=>'cmpvec'},
+		   vv_union => {vv=>'vv_union', p=>'unionvec'},
+		   vv_intersect => {vv=>'vv_intersect', p=>'intersectvec'},
+		   vv_setdiff => {vv=>'vv_setdiff', p=>'setdiffvec'},
+		   v_union => {vv=>'v_union', p=>'union_sorted'},
+		   v_intersect => {vv=>'v_intersect', p=>'intersect_sorted'},
+		   v_setdiff => {vv=>'v_setdiff', p=>'setdiff_sorted'},
+		   vv_rleND => {vv=>'rleND', p=>'rleND'},
+		   vv_rldND => {vv=>'rldND', p=>'rldND'},
+		   #vv_vcos => {vv=>'vv_vcos', p=>'vcos'},
+		   #vv_indx => {vv=>'vv_indx', p=>'indx'}, # DEBUG
 		  );
 
 
   @EXPORT_OK = @VV_SYMBOLS;
   foreach my $vv_sym (@VV_SYMBOLS) {
     no strict 'refs';
-    if ($VV_IMPORT{$vv_sym} && defined($VV_IMPORT{$vv_sym}{p})) {
+    my $vv_import = $VV_IMPORT{$vv_sym};
+    next if (!$vv_import);
+    if ($vv_import->{p} && PDL->can($vv_import->{p})) {
       # function lives in PDL core: import it here, and clobber $vv_sym here (but not in VV::Utils)
+      #print STDERR ("VV_IMPORT: *VV::$vv_sym = *PDL::$vv_import->{p}\n");
       no warnings 'redefine';
-      *$vv_sym = *{$VV_IMPORT{$vv_sym}{vv}} = $VV_IMPORT{$vv_sym}{p};
+      *$vv_sym = *{$vv_import->{vv}} = PDL->can($vv_import->{p});
     }
-    elsif ($VV_IMPORT{$vv_sym}) {
-      # $sym is defined here as "vv_$sym" : bind it here & in PDL namespace
-      my $sym = $VV_IMPORT{$vv_sym}{vv};
+    elsif ($vv_import->{vv}) {
+      # $sym is defined here as "$vv_sym" : bind it here & in PDL namespace
+      #print STDERR ("VV_IMPORT: *PDL::$sym = *VV::$vv_sym\n");
+      my $sym = $vv_import->{vv};
       ${PDL::}{$sym} = *$sym = *$vv_sym;
 
       # ... and make it exportable
