@@ -50,7 +50,7 @@ BEGIN {
 		   v_setdiff => {vv=>'v_setdiff', p=>'setdiff_sorted'},
 		   vv_rleND => {vv=>'rleND', p=>'rleND'},
 		   vv_rldND => {vv=>'rldND', p=>'rldND'},
-		   #vv_vcos => {vv=>'vv_vcos', p=>'vcos'},
+		   vv_vcos => {vv=>'vv_vcos', p=>'vcos'},
 		   #vv_indx => {vv=>'vv_indx', p=>'indx'}, # DEBUG
 		  );
 
