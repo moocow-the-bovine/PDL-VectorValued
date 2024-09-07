@@ -141,6 +141,25 @@ for backwards-compatibility.
 
 Functions expected to move to the PDL core are:
 
+ vv_rlevec
+ vv_rldvec
+ vv_rleseq
+ vv_rldseq
+ vv_enumvec
+ vv_enumvecg
+ vv_vsearchvec
+ vv_cmpvec
+ vv_union
+ vv_intersect
+ vv_setdiff
+ v_union
+ v_intersect
+ v_setdiff
+ vv_rleND
+ vv_rldND
+ vv_vcos
+
+Caveats:
 
 =over 4
 
